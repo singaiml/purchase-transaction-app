@@ -1,5 +1,29 @@
-````markdown
+
 # Purchase Transaction Application - API Testing Guide
+
+```markdown
+
+This is the canonical testing and API reference for the project. It includes quick-start instructions, endpoint reference, full API test workflows, error-case examples, Postman import notes, config, and troubleshooting.
+
+## Technology stack
+
+- Spring Boot 3.2.0
+- Java 17 LTS
+- Maven 3.9+
+- JUnit 5, Mockito, AssertJ
+- Jackson for JSON
+- RestTemplate for HTTP
+
+## Build and run:
+
+```bash
+cd purchase-transaction-app
+mvn clean package -DskipTests
+java -jar target/purchase-transaction-app-1.0.0.jar
+```
+
+The application will be available at `http://localhost:8080`.
+
 
 ## Application Running
 The application is running on `http://localhost:8080`
@@ -55,27 +79,6 @@ curl -s http://localhost:8080/api/v1/transactions | jq .
 
 ### 3. Get Specific Transaction
 **GET** `/api/v1/transactions/{transactionId}`
-```markdown
-# Purchase Transaction Application - API Testing Guide
-
-This is the canonical testing and API reference for the project. It includes quick-start instructions, endpoint reference, full API test workflows, error-case examples, Postman import notes, config, and troubleshooting.
-
-## Quick Start — Build & Run
-
-Prerequisites:
-
-- Java 17 LTS
-- Maven 3.9+
-
-Build and run:
-
-```bash
-cd purchase-transaction-app
-mvn clean package -DskipTests
-java -jar target/purchase-transaction-app-1.0.0.jar
-```
-
-The application will be available at `http://localhost:8080`.
 
 ## API Endpoints (reference)
 
@@ -262,17 +265,8 @@ mvn clean
 ```bash
 java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 ```
-
-## Technology stack
-
-- Spring Boot 3.2.0
-- Java 17 LTS
-- Maven 3.9+
-- JUnit 5, Mockito, AssertJ
-- Jackson for JSON
-- RestTemplate for HTTP
-
 ## Notes
 
-- `API_TestING_GUIDE.md` is now the canonical testing and API manual. `TESTING_AND_USAGE.md` will be removed to avoid duplication.
+- `API_Testing_Guide.md` is now the canonical testing and API manual. 
 
+`````
