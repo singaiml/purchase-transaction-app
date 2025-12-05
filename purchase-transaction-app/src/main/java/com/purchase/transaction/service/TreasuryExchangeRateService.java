@@ -6,7 +6,9 @@ import com.purchase.transaction.exception.ExchangeRateRetrievalException;
 import com.purchase.transaction.model.ExchangeRate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,14 +29,30 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final Map<String, ExchangeRate> exchangeRateCache;
+    private final String treasuryApiUrl;
     
     @Value("${app.exchange-rate.cache-enabled:true}")
     private boolean cacheEnabled;
+
+    // Package-private setter to control cache during tests
+    void setCacheEnabled(boolean enabled) {
+        this.cacheEnabled = enabled;
+    }
     
-    public TreasuryExchangeRateService(ObjectMapper objectMapper) {
-        this.restTemplate = new RestTemplate();
+    // Primary constructor used by Spring: allow injecting a RestTemplateBuilder and a configurable base URL.
+    public TreasuryExchangeRateService(RestTemplateBuilder restTemplateBuilder,
+                                      ObjectMapper objectMapper,
+                                      @Value("${app.exchange-rate.url:https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange}") String treasuryApiUrl) {
+        this(restTemplateBuilder.build(), objectMapper, treasuryApiUrl);
+    }
+
+    // Constructor used when a RestTemplate bean is available (Spring will autowire this)
+    @Autowired
+    public TreasuryExchangeRateService(RestTemplate restTemplate, ObjectMapper objectMapper, @Value("${app.exchange-rate.url:" + TREASURY_API_URL + "}") String treasuryApiUrl) {
+        this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.exchangeRateCache = new ConcurrentHashMap<>();
+        this.treasuryApiUrl = treasuryApiUrl == null || treasuryApiUrl.isBlank() ? TREASURY_API_URL : treasuryApiUrl;
     }
     
     @Override
@@ -44,12 +62,12 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         try {
             String formattedDate = date.format(DATE_FORMATTER);
             String filter = "exchange_rate_date:eq:\"%s\"".formatted(formattedDate);
-            String url = "%s?filter=%s&limit=500".formatted(TREASURY_API_URL, encodeFilter(filter));
+            String url = "%s?filter=%s&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
             
             log.debug("Fetching exchange rates from Treasury API for date: {}", formattedDate);
             @SuppressWarnings("null")
             String response = restTemplate.getForObject(url, String.class);
-            return parseExchangeRates(response, date);
+            return parseExchangeRates(response);
         } catch (Exception e) {
             log.error("Failed to retrieve exchange rates for date: {}", date, e);
             throw new ExchangeRateRetrievalException("Failed to retrieve exchange rates for date: %s".formatted(date), e);
@@ -69,12 +87,12 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         try {
             String formattedDate = date.format(DATE_FORMATTER);
             String filter = "exchange_rate_date:eq:\"%s\" and currency_code:eq:\"%s\"".formatted(formattedDate, currencyCode.toUpperCase());
-            String url = "%s?filter=%s".formatted(TREASURY_API_URL, encodeFilter(filter));
+            String url = "%s?filter=%s".formatted(this.treasuryApiUrl, encodeFilter(filter));
             
             log.debug("Fetching exchange rate from Treasury API for currency: {} on date: {}", currencyCode, formattedDate);
             @SuppressWarnings("null")
             String response = restTemplate.getForObject(url, String.class);
-            List<ExchangeRate> rates = parseExchangeRates(response, date);
+            List<ExchangeRate> rates = parseExchangeRates(response);
             
             if (!rates.isEmpty()) {
                 ExchangeRate rate = rates.get(0);
@@ -96,12 +114,12 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
             LocalDate today = LocalDate.now();
             String formattedDate = today.format(DATE_FORMATTER);
             String filter = "exchange_rate_date:eq:\"%s\"".formatted(formattedDate);
-            String url = "%s?filter=%s&limit=500".formatted(TREASURY_API_URL, encodeFilter(filter));
+            String url = "%s?filter=%s&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
             
             log.debug("Fetching available currencies from Treasury API");
             @SuppressWarnings("null")
             String response = restTemplate.getForObject(url, String.class);
-            List<ExchangeRate> rates = parseExchangeRates(response, today);
+            List<ExchangeRate> rates = parseExchangeRates(response);
             
             List<String> currencies = new ArrayList<>();
             Set<String> uniqueCurrencies = new LinkedHashSet<>();
@@ -121,7 +139,7 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         }
     }
     
-    private List<ExchangeRate> parseExchangeRates(String jsonResponse, LocalDate date) throws IOException {
+    private List<ExchangeRate> parseExchangeRates(String jsonResponse) throws IOException {
         List<ExchangeRate> rates = new ArrayList<>();
         JsonNode root = objectMapper.readTree(jsonResponse);
         JsonNode dataNode = root.path("data");
@@ -129,11 +147,13 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         if (dataNode.isArray()) {
             for (JsonNode node : dataNode) {
                 try {
+                    String dateStr = node.path("exchange_rate_date").asText(null);
+                    LocalDate effectiveDate = dateStr == null || dateStr.isBlank() ? null : LocalDate.parse(dateStr, DATE_FORMATTER);
                     ExchangeRate rate = new ExchangeRate(
                         node.path("currency_code").asText(),
                         node.path("currency_name").asText(),
                         new BigDecimal(node.path("exchange_rate").asText()),
-                        date,
+                        effectiveDate,
                         node.path("country_code").asText()
                     );
                     rates.add(rate);
@@ -153,5 +173,28 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
     
     private String getCacheKey(String currencyCode, LocalDate date) {
         return currencyCode.toUpperCase() + "_" + date.format(DATE_FORMATTER);
+    }
+
+    @Override
+    public Optional<ExchangeRate> getMostRecentExchangeRateWithinRange(String currencyCode, LocalDate fromDate, LocalDate toDate) {
+        if (currencyCode == null || currencyCode.trim().isEmpty()) throw new IllegalArgumentException("Currency code cannot be null or empty");
+        if (fromDate == null || toDate == null) throw new IllegalArgumentException("Dates cannot be null");
+        try {
+            String filter = "exchange_rate_date:gte:\"%s\" and exchange_rate_date:lte:\"%s\" and currency_code:eq:\"%s\""
+                    .formatted(fromDate.format(DATE_FORMATTER), toDate.format(DATE_FORMATTER), currencyCode.toUpperCase());
+            String url = "%s?filter=%s&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
+            log.debug("Fetching exchange rates from Treasury API for currency {} between {} and {}", currencyCode, fromDate, toDate);
+            @SuppressWarnings("null")
+            String response = restTemplate.getForObject(url, String.class);
+            List<ExchangeRate> rates = parseExchangeRates(response);
+            if (rates.isEmpty()) return Optional.empty();
+            // pick the most recent by effective date
+            rates.sort(Comparator.comparing(ExchangeRate::getEffectiveDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+            ExchangeRate rate = rates.get(0);
+            return Optional.of(rate);
+        } catch (Exception e) {
+            log.error("Failed to retrieve exchange rates for currency {} between {} and {}", currencyCode, fromDate, toDate, e);
+            throw new ExchangeRateRetrievalException("Failed to retrieve exchange rates for currency: %s".formatted(currencyCode), e);
+        }
     }
 }

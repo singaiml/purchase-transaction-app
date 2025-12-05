@@ -108,28 +108,16 @@ public class PurchaseTransactionService implements IPurchaseTransactionService {
         // Requirement: Use the latest exchange rate <= purchase date within the last 6 months
         LocalDate purchaseDate = transaction.getTransactionDate();
         LocalDate cutoffDate = purchaseDate.minusMonths(6);
-        ExchangeRate exchangeRate = null;
-        LocalDate currentCheck = purchaseDate;
 
-        while (!currentCheck.isBefore(cutoffDate)) {
-            try {
-                Optional<ExchangeRate> maybe = exchangeRateService.getExchangeRateForCurrency(currencyCode.toUpperCase(), currentCheck);
-                if (maybe.isPresent()) {
-                    exchangeRate = maybe.get();
-                    break;
-                }
-            } catch (Exception e) {
-                log.debug("Error while checking exchange rate for {} on {}: {}", currencyCode, currentCheck, e.getMessage());
-            }
-            currentCheck = currentCheck.minusDays(1);
-        }
-
-        if (exchangeRate == null) {
+        Optional<ExchangeRate> maybeRate = exchangeRateService.getMostRecentExchangeRateWithinRange(currencyCode.toUpperCase(), cutoffDate, purchaseDate);
+        if (maybeRate.isEmpty()) {
             String msg = String.format("Cannot convert purchase to target currency %s: no exchange rate within 6 months on or before %s",
                     currencyCode, purchaseDate);
             log.error(msg);
             throw new ExchangeRateRetrievalException(msg);
         }
+
+        ExchangeRate exchangeRate = maybeRate.get();
         
         BigDecimal convertedAmount = transaction.getAmount()
             .multiply(exchangeRate.getExchangeRate())

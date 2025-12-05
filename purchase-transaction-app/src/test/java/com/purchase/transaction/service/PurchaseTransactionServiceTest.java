@@ -164,13 +164,10 @@ class PurchaseTransactionServiceTest {
 
         when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(tx));
 
-        // Mock exchangeRateService to return empty for dates after 2025-04-15, and a rate on 2025-06-01 (within 6 months)
+        // Mock exchangeRateService to return the most recent rate within the 6-month window (2025-06-01)
         ExchangeRate foundRate = new ExchangeRate("EUR", "Euro", new BigDecimal("1.2345"), LocalDate.of(2025,6,1), "EU");
-        when(exchangeRateService.getExchangeRateForCurrency(eq("EUR"), any(LocalDate.class))).thenAnswer(invocation -> {
-            LocalDate d = invocation.getArgument(1);
-            if (d.equals(foundRate.getEffectiveDate())) return Optional.of(foundRate);
-            return Optional.empty();
-        });
+        LocalDate cutoff = purchaseDate.minusMonths(6);
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.of(foundRate));
 
         ConvertedTransaction converted = purchaseTransactionService.convertTransaction(transactionId, "EUR");
         assertNotNull(converted);
@@ -190,7 +187,8 @@ class PurchaseTransactionServiceTest {
 
         when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(tx));
 
-        when(exchangeRateService.getExchangeRateForCurrency(eq("EUR"), any(LocalDate.class))).thenReturn(Optional.empty());
+        LocalDate cutoff = purchaseDate.minusMonths(6);
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.empty());
 
         Exception ex = assertThrows(RuntimeException.class, () -> purchaseTransactionService.convertTransaction(transactionId, "EUR"));
         assertTrue(ex.getMessage().contains("Cannot convert purchase to target currency"));
@@ -207,11 +205,8 @@ class PurchaseTransactionServiceTest {
         when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(tx));
 
         ExchangeRate rate = new ExchangeRate("EUR", "Euro", new BigDecimal("0.333333"), LocalDate.of(2025,11,30), "EU");
-        when(exchangeRateService.getExchangeRateForCurrency(eq("EUR"), any(LocalDate.class))).thenAnswer(invocation -> {
-            LocalDate d = invocation.getArgument(1);
-            if (d.equals(rate.getEffectiveDate())) return Optional.of(rate);
-            return Optional.empty();
-        });
+        LocalDate cutoff = purchaseDate.minusMonths(6);
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.of(rate));
 
         ConvertedTransaction converted = purchaseTransactionService.convertTransaction(transactionId, "EUR");
         // 100 * 0.333333 = 33.3333 -> rounded to 33.33
