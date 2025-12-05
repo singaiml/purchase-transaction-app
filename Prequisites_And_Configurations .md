@@ -184,5 +184,4 @@ java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 3. **Modify Data**: Create your own transactions and test the endpoints
 4. **Extend Features**: Add new endpoints or services as needed
 
-````
-  "transactionId": "550e8400-e29b-41d4-a716-446655440000",
+

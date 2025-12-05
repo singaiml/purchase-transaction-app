@@ -151,13 +151,16 @@ The following scripts exercise end-to-end API behavior and are handy for manual 
 
 ```bash
 TXID1=$(curl -s -X POST http://localhost:8080/api/v1/transactions \
-  -d "description=Conference%20Pass&transactionDate=2025-11-30&amount=599.99" | jq -r '.transactionId')
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-d "description=Conference%20Pass&transactionDate=2025-11-30&amount=599.99" | jq -r '.transactionId')
 
 TXID2=$(curl -s -X POST http://localhost:8080/api/v1/transactions \
-  -d "description=Team%20Lunch&transactionDate=2025-12-03&amount=125.75" | jq -r '.transactionId')
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-d "description=Team%20Lunch&transactionDate=2025-12-03&amount=125.75" | jq -r '.transactionId')
 
 TXID3=$(curl -s -X POST http://localhost:8080/api/v1/transactions \
-  -d "description=Software%20License&transactionDate=2025-12-02&amount=299.00" | jq -r '.transactionId')
+	-H "Content-Type: application/x-www-form-urlencoded" \
+	-d "description=Software%20License&transactionDate=2025-12-02&amount=299.00" | jq -r '.transactionId')
 
 echo "Created transactions: $TXID1, $TXID2, $TXID3"
 ```

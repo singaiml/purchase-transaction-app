@@ -1,6 +1,7 @@
 package com.purchase.transaction.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -79,24 +80,30 @@ public class PurchaseTransaction implements Serializable {
         this.createdAt = createdAt;
     }
     
+    @JsonIgnore
     public boolean isDescriptionValid() {
         return description != null && !description.trim().isEmpty() && description.length() <= 50;
     }
     
+    @JsonIgnore
     public boolean isAmountValid() {
         if (amount == null || amount.signum() <= 0) return false;
         return amount.scale() <= 2;
     }
     
+    @JsonIgnore
     public boolean isTransactionDateValid() {
         return transactionDate != null && !transactionDate.isAfter(LocalDate.now());
     }
     
+    @JsonIgnore
     public boolean isTransactionIdValid() {
         return transactionId != null && !transactionId.trim().isEmpty();
     }
     
+    @JsonIgnore
     public boolean isValid() {
         return isTransactionIdValid() && isDescriptionValid() && isTransactionDateValid() && isAmountValid();
     }
+
 }
