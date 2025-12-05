@@ -39,17 +39,13 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         this.cacheEnabled = enabled;
     }
     
-    // Primary constructor used by Spring: allow injecting a RestTemplateBuilder and a configurable base URL.
-    public TreasuryExchangeRateService(RestTemplateBuilder restTemplateBuilder,
+    // Single constructor: prefer an injected RestTemplate when available (tests often provide one),
+    // otherwise build one from RestTemplateBuilder for runtime usage.
+    public TreasuryExchangeRateService(@Autowired(required = false) RestTemplate restTemplate,
+                                      RestTemplateBuilder restTemplateBuilder,
                                       ObjectMapper objectMapper,
-                                      @Value("${app.exchange-rate.url:https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange}") String treasuryApiUrl) {
-        this(restTemplateBuilder.build(), objectMapper, treasuryApiUrl);
-    }
-
-    // Constructor used when a RestTemplate bean is available (Spring will autowire this)
-    @Autowired
-    public TreasuryExchangeRateService(RestTemplate restTemplate, ObjectMapper objectMapper, @Value("${app.exchange-rate.url:" + TREASURY_API_URL + "}") String treasuryApiUrl) {
-        this.restTemplate = restTemplate;
+                                      @Value("${app.exchange-rate.url:" + TREASURY_API_URL + "}") String treasuryApiUrl) {
+        this.restTemplate = restTemplate != null ? restTemplate : restTemplateBuilder.build();
         this.objectMapper = objectMapper;
         this.exchangeRateCache = new ConcurrentHashMap<>();
         this.treasuryApiUrl = treasuryApiUrl == null || treasuryApiUrl.isBlank() ? TREASURY_API_URL : treasuryApiUrl;
