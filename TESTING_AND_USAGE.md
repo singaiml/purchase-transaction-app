@@ -8,6 +8,17 @@
 
 ### Start the Application
 
+````markdown
+# Purchase Transaction Application - Quick Start Guide
+
+## Running the Application
+
+### Prerequisites
+- Java 17 LTS
+- Maven 3.9+
+
+### Start the Application
+
 ```bash
 # Build the application
 cd purchase-transaction-app
@@ -85,47 +96,7 @@ purchase-transaction-app/
 │   ├── main/
 │   │   ├── java/com/purchase/transaction/
 │   │   │   ├── controller/
-│   │   │   │   ├── TransactionController.java
-│   │   │   │   └── CurrencyConversionController.java
-│   │   │   ├── service/
-│   │   │   │   ├── PurchaseTransactionService.java
-│   │   │   │   ├── TreasuryExchangeRateService.java
-│   │   │   │   └── Interfaces
-│   │   │   ├── model/
-│   │   │   │   ├── PurchaseTransaction.java
-│   │   │   │   ├── ExchangeRate.java
-│   │   │   │   └── ConvertedTransaction.java
-│   │   │   ├── repository/
-│   │   │   │   ├── FileBasedTransactionRepository.java
-│   │   │   │   └── ITransactionRepository.java
-│   │   │   ├── exception/
-│   │   │   │   ├── TransactionValidationException.java
-│   │   │   │   ├── TransactionNotFoundException.java
-│   │   │   │   └── ExchangeRateRetrievalException.java
-│   │   │   └── config/
-│   │   │       ├── JacksonConfig.java
-│   │   │       └── GlobalExceptionHandler.java
-│   │   └── resources/application.properties
-│   └── test/
-│       ├── java/com/purchase/transaction/
-│       │   ├── model/
-│       │   │   ├── PurchaseTransactionTest.java
-│       │   │   ├── ExchangeRateTest.java
-│       │   │   └── ConvertedTransactionTest.java
-│       │   ├── service/
-│       │   │   └── PurchaseTransactionServiceTest.java
-│       │   ├── controller/
-│       │   │   ├── TransactionControllerTest.java
-│       │   │   └── CurrencyConversionControllerTest.java
-│       │   ├── repository/
-│       │   │   └── FileBasedTransactionRepositoryTest.java
-│       │   ├── exception/
-│       │   │   └── ExceptionTest.java
-│       │   └── config/
-│       │       └── JacksonConfigTest.java
-│       └── resources/application-test.properties
-├── pom.xml
-└── API_TESTING_GUIDE.md
+... (truncated for brevity) ...
 ```
 
 ## Key Features
@@ -212,3 +183,6 @@ java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 2. **Run the Tests**: Execute `mvn test` to see all test cases
 3. **Modify Data**: Create your own transactions and test the endpoints
 4. **Extend Features**: Add new endpoints or services as needed
+
+````
+  "transactionId": "550e8400-e29b-41d4-a716-446655440000",
