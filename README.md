@@ -180,16 +180,16 @@ curl -X DELETE http://localhost:8080/api/v1/transactions/{id}
 ## Troubleshooting
 
 **Issue**: Port 8080 already in use  
-**Solution**: Change port number to 8081 or something else in `application.properties`: `server.port=8081`  
+> **Solution**: Change port number to 8081 or something else in `application.properties`: `server.port=8081`  
 ```bash
 java -jar target/purchase-transaction-app-1.0.0.jar --server.port=8081
 ```
 
 **Issue**: Treasury API not responding  
-**Solution**: Check internet connectivity; API may be rate-limited
+> **Solution**: Check internet connectivity; API may be rate-limited
 
 **Issue**: Data not persisting  
-**Solution**: Ensure write permissions to `./data` directory
+> **Solution**: Ensure write permissions to `./data` directory
 
 **Clear build artifacts:**  
 ```bash
