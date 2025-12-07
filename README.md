@@ -215,19 +215,12 @@ java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 
 This is a complete, production-ready application that:
 
-✅ Accepts and validates purchase transactions
-
-✅ Persists data without external databases
-
-✅ Integrates with US Treasury API for exchange rates
-
-✅ Converts transactions to any supported currency
-
-✅ Provides REST API for easy integration
-
-✅ Includes comprehensive error handling
-
-✅ Is fully testable with 40+ test cases
-
+✅ Accepts and validates purchase transactions  
+✅ Persists data without external databases  
+✅ Integrates with US Treasury API for exchange rates  
+✅ Converts transactions to any supported currency  
+✅ Provides REST API for easy integration  
+✅ Includes comprehensive error handling  
+✅ Is fully testable with 40+ test cases  
 ✅ Follows enterprise architecture patterns
 
