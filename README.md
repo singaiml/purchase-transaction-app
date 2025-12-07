@@ -134,14 +134,19 @@ rm ./data/transactions.json
 ```
 
 ## Running Tests
+
+### Run all unit tests###  
 ```bash
-# Run all unit tests
 mvn clean test
+```
 
-# Run specific test class
+### Run specific test class###  
+```
 mvn test -Dtest=PurchaseTransactionServiceTest
+```
 
-# Run with coverage report
+### Run with coverage report    
+```
 mvn test jacoco:report
 ```
 
@@ -149,7 +154,6 @@ mvn test jacoco:report
 
 ### Start the Application
 ```bash
-cd purchase-transaction-app
 mvn clean package -DskipTests
 java -jar target/purchase-transaction-app-1.0.0.jar
 ```
