@@ -20,3 +20,7 @@ logs/
 .env
 .env.local
 *.code-workspace
+node_modules/
+dist/
+coverage/
+.cache/
