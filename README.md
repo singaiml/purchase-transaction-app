@@ -180,14 +180,18 @@ curl -X DELETE http://localhost:8080/api/v1/transactions/{id}
 ## Troubleshooting
 
 **Issue**: Port 8080 already in use
+
 **Solution**: Change port number to 8081 or something else in `application.properties`: `server.port=8081`
+
 ```bash
 java -jar target/purchase-transaction-app-1.0.0.jar --server.port=8081
 ```
 **Issue**: Treasury API not responding
+
 **Solution**: Check internet connectivity; API may be rate-limited
 
 **Issue**: Data not persisting
+
 **Solution**: Ensure write permissions to `./data` directory
 
 **Clear build artifacts:**
@@ -196,6 +200,7 @@ mvn clean
 ```
 
 **See detailed logs:**
+
 ```bash
 java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 ```
@@ -209,12 +214,20 @@ java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 ## Conclusion
 
 This is a complete, production-ready application that:
+
 ✅ Accepts and validates purchase transactions
+
 ✅ Persists data without external databases
+
 ✅ Integrates with US Treasury API for exchange rates
+
 ✅ Converts transactions to any supported currency
+
 ✅ Provides REST API for easy integration
+
 ✅ Includes comprehensive error handling
+
 ✅ Is fully testable with 40+ test cases
+
 ✅ Follows enterprise architecture patterns
 
