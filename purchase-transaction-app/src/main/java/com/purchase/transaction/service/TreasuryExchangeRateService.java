@@ -22,8 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class TreasuryExchangeRateService implements IExchangeRateService {
     private static final Logger log = LoggerFactory.getLogger(TreasuryExchangeRateService.class);
+    private static final String DEFAULT_TREASURY_API_URL = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange";
     
-    private static final String TREASURY_API_URL = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange";
+    
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     
     private final RestTemplate restTemplate;
@@ -44,11 +45,11 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
     public TreasuryExchangeRateService(@Autowired(required = false) RestTemplate restTemplate,
                                       RestTemplateBuilder restTemplateBuilder,
                                       ObjectMapper objectMapper,
-                                      @Value("${app.exchange-rate.url:" + TREASURY_API_URL + "}") String treasuryApiUrl) {
+                                      @Value("${app.exchange-rate.url:}") String treasuryApiUrl) {
         this.restTemplate = restTemplate != null ? restTemplate : restTemplateBuilder.build();
         this.objectMapper = objectMapper;
         this.exchangeRateCache = new ConcurrentHashMap<>();
-        this.treasuryApiUrl = treasuryApiUrl == null || treasuryApiUrl.isBlank() ? TREASURY_API_URL : treasuryApiUrl;
+        this.treasuryApiUrl = (treasuryApiUrl == null || treasuryApiUrl.isBlank()) ? DEFAULT_TREASURY_API_URL : treasuryApiUrl;
     }
     
     @Override
