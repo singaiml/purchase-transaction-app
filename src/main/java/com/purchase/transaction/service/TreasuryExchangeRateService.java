@@ -200,22 +200,119 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
                 try {
                     String dateStr = node.path("record_date").asText(null);
                     LocalDate effectiveDate = dateStr == null || dateStr.isBlank() ? null : LocalDate.parse(dateStr, DATE_FORMATTER);
+                    
+                    // Extract currency information from Treasury API response
+                    // Treasury API fields:
+                    // - "currency": Currency name (e.g., "Euro", "Pound Sterling")
+                    // - "country_currency_desc": Full description (e.g., "Euro Zone-Euro")
+                    // - "country": Country name
+                    String currencyName = node.path("currency").asText("");
+                    String country = node.path("country").asText("");
+                    String countryCurrencyDesc = node.path("country_currency_desc").asText("");
+                    String exchangeRateStr = node.path("exchange_rate").asText();
+                    
+                    // Skip if missing critical fields
+                    if (currencyName.isEmpty() || exchangeRateStr.isEmpty()) {
+                        log.debug("Skipping record with missing currency or exchange_rate");
+                        continue;
+                    }
+                    
+                    // Map currency name to standard ISO 4217 code
+                    String currencyCode = mapCurrencyNameToCode(currencyName);
+                    
                     ExchangeRate rate = new ExchangeRate(
-                        node.path("currency_code").asText(),
-                        node.path("currency_name").asText(),
-                        new BigDecimal(node.path("exchange_rate").asText()),
+                        currencyCode,  // Use mapped currency code (e.g., "EUR" for "Euro")
+                        countryCurrencyDesc,  // Full description (e.g., "Euro Zone-Euro")
+                        new BigDecimal(exchangeRateStr),
                         effectiveDate,
-                        node.path("country_code").asText()
+                        country  // Use country name
                     );
                     rates.add(rate);
+                    log.debug("Parsed exchange rate: {} {} on {}", currencyCode, exchangeRateStr, effectiveDate);
                 } catch (Exception e) {
-                    log.warn("Failed to parse exchange rate record", e);
+                    log.warn("Failed to parse exchange rate record: {}", e.getMessage());
                 }
             }
         }
         
         log.info("Parsed {} exchange rates from API response", rates.size());
         return rates;
+    }
+    
+    /**
+     * Maps Treasury API currency names to standard ISO 4217 currency codes.
+     * The Treasury API returns currency names like "Euro", "Dollar", "Pound Sterling", etc.
+     * This method converts them to standard codes for display purposes.
+     * 
+     * NOTE: For currencies shared by multiple countries (e.g., "Rupee" used by India, Pakistan, Nepal),
+     * the user must specify the country to disambiguate. This honors the API contract.
+     */
+    private String mapCurrencyNameToCode(String currencyName) {
+        if (currencyName == null || currencyName.isEmpty()) {
+            return "";
+        }
+        
+        return switch (currencyName.toLowerCase()) {
+            case "euro" -> "EUR";
+            case "dollar" -> "USD";
+            case "pound sterling" -> "GBP";
+            case "yen" -> "JPY";
+            case "canadian dollar" -> "CAD";
+            case "australian dollar" -> "AUD";
+            case "swiss franc" -> "CHF";
+            case "swedish krona" -> "SEK";
+            case "norwegian krone" -> "NOK";
+            case "danish krone" -> "DKK";
+            case "hong kong dollar" -> "HKD";
+            case "singapore dollar" -> "SGD";
+            case "new zealand dollar" -> "NZD";
+            case "mexican peso" -> "MXN";
+            case "brazilian real" -> "BRL";
+            case "south african rand" -> "ZAR";
+            case "south korean won" -> "KRW";
+            case "thai baht" -> "THB";
+            case "malaysian ringgit" -> "MYR";
+            case "indonesian rupiah" -> "IDR";
+            case "philippine peso" -> "PHP";
+            case "chinese yuan", "renminbi" -> "CNY";
+            case "russian ruble" -> "RUB";
+            case "turkish lira" -> "TRY";
+            case "saudi riyal" -> "SAR";
+            case "united arab emirates dirham" -> "AED";
+            case "israeli new sheqel" -> "ILS";
+            case "afghan afghani" -> "AFN";
+            case "argentine peso" -> "ARS";
+            case "bahraini dinar" -> "BHD";
+            case "colombian peso" -> "COP";
+            case "czech koruna" -> "CZK";
+            case "hungarian forint" -> "HUF";
+            case "icelandic króna" -> "ISK";
+            case "kuwaiti dinar" -> "KWD";
+            case "lebanese pound" -> "LBP";
+            case "libyan dinar" -> "LYD";
+            case "moroccan dirham" -> "MAD";
+            case "omani rial" -> "OMR";
+            case "peruvian nuevo sol" -> "PEN";
+            case "qatari riyal" -> "QAR";
+            case "ukrainian hryvnia" -> "UAH";
+            case "bangladeshi taka" -> "BDT";
+            case "bulgarian lev" -> "BGN";
+            case "croatian kuna" -> "HRK";
+            case "estonian kroon" -> "EEK";
+            case "lithuanian litas" -> "LTL";
+            case "pakistani rupee" -> "PKR";
+            case "polish zloty" -> "PLN";
+            case "romanian leu" -> "RON";
+            case "slovak koruna" -> "SKK";
+            case "slovenian tolar" -> "SIT";
+            case "venezuelan bolívar" -> "VEB";
+            case "vietnamese dong" -> "VND";
+            case "zambian kwacha" -> "ZMW";
+            case "kenyan shilling" -> "KES";
+            case "nigerian naira" -> "NGN";
+            case "tunisian dinar" -> "TND";
+            default -> currencyName.toUpperCase();  // Fallback: use original name
+        };
     }
     
     private String encodeFilter(String filter) {
@@ -228,6 +325,12 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
 
     /**
      * Retrieves the most recent exchange rate within a date range.
+     * 
+     * REQUIREMENT: Must use exchange rate with effective date <= endDate (purchase date)
+     * within the last 6 months (startDate = 6 months before endDate).
+     * 
+     * STRATEGY: Query for rates from startDate onward, then locally filter for rates
+     * that are ON or BEFORE endDate, and pick the most recent one.
      * 
      * RESILIENCE PATTERNS APPLIED:
      * - @CircuitBreaker: Fast failure when Treasury API is down
@@ -245,36 +348,46 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         if (currencyCode == null || currencyCode.trim().isEmpty()) throw new IllegalArgumentException("Currency code cannot be null or empty");
         if (startDate == null || endDate == null) throw new IllegalArgumentException("Dates cannot be null");
         try {
-            String filter = "record_date:gte:\"%s\" and record_date:lte:\"%s\" and currency_code:eq:\"%s\""
-                    .formatted(startDate.format(DATE_FORMATTER), endDate.format(DATE_FORMATTER), currencyCode.toUpperCase());
-            String url = "%s?filter=%s&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
-            log.debug("Fetching exchange rates from Treasury API for currency {} between {} and {}", currencyCode, startDate, endDate);
+            // Query for rates from startDate onwards (don't limit to endDate in the API call)
+            // The Treasury API may not have data for very recent dates, so we query a broader range
+            // Note: Treasury API doesn't support currency_code filtering, so we query broadly
+            // and filter locally for the requested currency
+            String filter = "record_date:gte:\"%s\""
+                    .formatted(startDate.format(DATE_FORMATTER));
+            String url = "%s?filter=%s&sort=-record_date&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
+            log.debug("Fetching exchange rates from Treasury API for currency {} from {} onwards", currencyCode, startDate);
             @SuppressWarnings("null")
             String response = restTemplate.getForObject(url, String.class);
             List<ExchangeRate> rates = parseExchangeRates(response);
-            if (rates.isEmpty()) return Optional.empty();
-            
-            // Filter rates to ensure they're within the requested date range
-            List<ExchangeRate> filteredRates = rates.stream()
-                    .filter(rate -> rate.getEffectiveDate() != null)
-                    .filter(rate -> !rate.getEffectiveDate().isBefore(startDate))
-                    .filter(rate -> !rate.getEffectiveDate().isAfter(endDate))
-                    .toList();
-            
-            if (filteredRates.isEmpty()) {
-                log.warn("API returned {} rates but none within date range {} to {}", rates.size(), startDate, endDate);
+            if (rates.isEmpty()) {
+                log.warn("API returned no exchange rates for currency {} since {}", currencyCode, startDate);
                 return Optional.empty();
             }
             
-            // pick the most recent by effective date
-            filteredRates.stream()
-                    .max(Comparator.comparing(ExchangeRate::getEffectiveDate))
-                    .ifPresent(rate -> log.info("Selected exchange rate for {} with effective date: {}", currencyCode, rate.getEffectiveDate()));
+            // Filter rates to find matches for the requested currency code
+            // The API returns currency names, so we need to match against those
+            List<ExchangeRate> currencyMatches = rates.stream()
+                    .filter(rate -> rate.getCurrencyCode().equalsIgnoreCase(currencyCode) || 
+                                  rate.getCurrencyName().toUpperCase().contains(currencyCode.toUpperCase()))
+                    .filter(rate -> rate.getEffectiveDate() != null)
+                    .filter(rate -> !rate.getEffectiveDate().isAfter(endDate))  // Must be on or before purchase date
+                    .filter(rate -> !rate.getEffectiveDate().isBefore(startDate))  // Must be within 6 months
+                    .toList();
             
-            ExchangeRate rate = filteredRates.stream()
-                    .max(Comparator.comparing(ExchangeRate::getEffectiveDate))
-                    .orElseThrow();
-            return Optional.of(rate);
+            if (currencyMatches.isEmpty()) {
+                log.warn("API returned {} rates but none matching currency {} on or before {} and on/after {}", 
+                        rates.size(), currencyCode, endDate, startDate);
+                return Optional.empty();
+            }
+            
+            // Pick the most recent (latest) by effective date
+            Optional<ExchangeRate> mostRecent = currencyMatches.stream()
+                    .max(Comparator.comparing(ExchangeRate::getEffectiveDate));
+            
+            mostRecent.ifPresent(rate -> log.info("Selected exchange rate for {} with effective date: {} (rate: {})", 
+                    currencyCode, rate.getEffectiveDate(), rate.getExchangeRate()));
+            
+            return mostRecent;
         } catch (Exception e) {
             log.error("Failed to retrieve exchange rates for currency {} between {} and {}", currencyCode, startDate, endDate, e);
             throw new ExchangeRateRetrievalException("Failed to retrieve exchange rates for currency: %s".formatted(currencyCode), e);

@@ -37,7 +37,7 @@ class TreasuryExchangeRateServiceTest {
 
     @Test
     void parseAndGetAvailableCurrencies_success() {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.3333\",\"exchange_rate_date\":\"2025-12-01\"},{\"currency_code\":\"USD\",\"exchange_rate\":\"1\",\"exchange_rate_date\":\"2025-12-01\"}]}";
+        String json = "{\"data\":[{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.3333\",\"record_date\":\"2025-12-01\",\"country\":\"Euro Zone\"},{\"currency\":\"Dollar\",\"country_currency_desc\":\"United States-Dollar\",\"exchange_rate\":\"1\",\"record_date\":\"2025-12-01\",\"country\":\"United States\"}]}";
         mockServer.expect(once(), requestTo(org.hamcrest.Matchers.containsString("filter="))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         List<String> currencies = service.getAvailableCurrencies();
@@ -48,7 +48,7 @@ class TreasuryExchangeRateServiceTest {
 
     @Test
     void getMostRecentExchangeRateWithinRange_picksMostRecent() {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.2\",\"record_date\":\"2025-01-01\"},{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.4\",\"record_date\":\"2025-06-01\"}]}";
+        String json = "{\"data\":[{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.2\",\"record_date\":\"2025-01-01\",\"country\":\"Euro Zone\"},{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.4\",\"record_date\":\"2025-06-01\",\"country\":\"Euro Zone\"}]}";
         mockServer.expect(once(), requestTo(org.hamcrest.Matchers.containsString("filter="))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         Optional<ExchangeRate> maybe = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));

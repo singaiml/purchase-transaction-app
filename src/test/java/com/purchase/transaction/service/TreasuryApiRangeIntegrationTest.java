@@ -64,7 +64,7 @@ public class TreasuryApiRangeIntegrationTest {
                 LocalDate purchaseDate = LocalDate.of(2025, 12, 05);
 
                 // Prepare responses: simulate one API call returning the rate within the range
-                String rateResponse = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.3333\",\"record_date\":\"2025-12-03\",\"country_code\":\"EU\"}]}";
+                String rateResponse = "{\"data\":[{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.3333\",\"record_date\":\"2025-12-03\",\"country\":\"Euro Zone\"}]}";
 
                 server.expect(requestTo(org.hamcrest.Matchers.containsString("record_date")))
                                 .andRespond(withSuccess(rateResponse, MediaType.APPLICATION_JSON));
