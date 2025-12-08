@@ -83,7 +83,7 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         
         try {
             String formattedDate = date.format(DATE_FORMATTER);
-            String filter = "exchange_rate_date:eq:\"%s\" and currency_code:eq:\"%s\"".formatted(formattedDate, currencyCode.toUpperCase());
+            String filter = "record_date:eq:\"%s\" and currency_code:eq:\"%s\"".formatted(formattedDate, currencyCode.toUpperCase());
             String url = "%s?filter=%s".formatted(this.treasuryApiUrl, encodeFilter(filter));
             
             log.debug("Fetching exchange rate from Treasury API for currency: {} on date: {}", currencyCode, formattedDate);
@@ -108,10 +108,11 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
     @Override
     public List<String> getAvailableCurrencies() {
         try {
-            LocalDate today = LocalDate.now();
-            String formattedDate = today.format(DATE_FORMATTER);
-            String filter = "exchange_rate_date:eq:\"%s\"".formatted(formattedDate);
-            String url = "%s?filter=%s&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
+            // Query for rates from the latest update to ensure we get recent data
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusMonths(6);
+            String filter = "record_date:gte:\"%s\"".formatted(startDate.format(DATE_FORMATTER));
+            String url = "%s?filter=%s&sort=-record_date&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
             
             log.debug("Fetching available currencies from Treasury API");
             @SuppressWarnings("null")
@@ -144,7 +145,7 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         if (dataNode.isArray()) {
             for (JsonNode node : dataNode) {
                 try {
-                    String dateStr = node.path("exchange_rate_date").asText(null);
+                    String dateStr = node.path("record_date").asText(null);
                     LocalDate effectiveDate = dateStr == null || dateStr.isBlank() ? null : LocalDate.parse(dateStr, DATE_FORMATTER);
                     ExchangeRate rate = new ExchangeRate(
                         node.path("currency_code").asText(),
@@ -177,7 +178,7 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         if (currencyCode == null || currencyCode.trim().isEmpty()) throw new IllegalArgumentException("Currency code cannot be null or empty");
         if (fromDate == null || toDate == null) throw new IllegalArgumentException("Dates cannot be null");
         try {
-            String filter = "exchange_rate_date:gte:\"%s\" and exchange_rate_date:lte:\"%s\" and currency_code:eq:\"%s\""
+            String filter = "record_date:gte:\"%s\" and record_date:lte:\"%s\" and currency_code:eq:\"%s\""
                     .formatted(fromDate.format(DATE_FORMATTER), toDate.format(DATE_FORMATTER), currencyCode.toUpperCase());
             String url = "%s?filter=%s&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
             log.debug("Fetching exchange rates from Treasury API for currency {} between {} and {}", currencyCode, fromDate, toDate);

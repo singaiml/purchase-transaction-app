@@ -48,7 +48,7 @@ class TreasuryExchangeRateServiceTest {
 
     @Test
     void getMostRecentExchangeRateWithinRange_picksMostRecent() {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.2\",\"exchange_rate_date\":\"2025-01-01\"},{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.4\",\"exchange_rate_date\":\"2025-06-01\"}]}";
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.2\",\"record_date\":\"2025-01-01\"},{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.4\",\"record_date\":\"2025-06-01\"}]}";
         mockServer.expect(once(), requestTo(org.hamcrest.Matchers.containsString("filter="))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         Optional<ExchangeRate> maybe = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));

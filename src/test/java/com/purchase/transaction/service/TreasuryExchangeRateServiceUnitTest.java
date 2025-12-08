@@ -38,7 +38,7 @@ class TreasuryExchangeRateServiceUnitTest {
 
     @Test
     void parsesValidResponse_andReturnsRates() throws Exception {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.3333\",\"exchange_rate_date\":\"2025-12-01\",\"country_code\":\"EU\"}]}";
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.3333\",\"record_date\":\"2025-12-01\",\"country_code\":\"EU\"}]}";
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         List<ExchangeRate> rates = service.getExchangeRatesForDate(LocalDate.of(2025,12,1));
@@ -53,7 +53,7 @@ class TreasuryExchangeRateServiceUnitTest {
 
     @Test
     void malformedRecord_isSkipped() throws Exception {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.3333\",\"exchange_rate_date\":\"2025-12-01\",\"country_code\":\"EU\"},{\"currency_code\":\"BAD\",\"exchange_rate\":\"N/A\"}]}";
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.3333\",\"record_date\":\"2025-12-01\",\"country_code\":\"EU\"},{\"currency_code\":\"BAD\",\"exchange_rate\":\"N/A\"}]}";
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         List<ExchangeRate> rates = service.getExchangeRatesForDate(LocalDate.of(2025,12,1));
@@ -63,7 +63,7 @@ class TreasuryExchangeRateServiceUnitTest {
 
     @Test
     void getMostRecentExchangeRateWithinRange_picksMostRecent() throws Exception {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.3\",\"exchange_rate_date\":\"2025-01-01\"},{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.4\",\"exchange_rate_date\":\"2025-06-30\"}]}";
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.3\",\"record_date\":\"2025-01-01\"},{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.4\",\"record_date\":\"2025-06-30\"}]}";
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         Optional<ExchangeRate> opt = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
@@ -74,7 +74,7 @@ class TreasuryExchangeRateServiceUnitTest {
 
     @Test
     void getExchangeRateForCurrency_cachesResult() throws Exception {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.3333\",\"exchange_rate_date\":\"2025-12-01\"}]}";
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.3333\",\"record_date\":\"2025-12-01\"}]}";
         // expect only one HTTP request because the second call should be served from cache
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
@@ -126,7 +126,7 @@ class TreasuryExchangeRateServiceUnitTest {
 
     @Test
     void parse_blankEffectiveDate_resultsInNullEffectiveDate() throws Exception {
-        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.5\",\"exchange_rate_date\":\"\",\"currency_name\":\"Euro\",\"country_code\":\"EU\"}]}";
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.5\",\"record_date\":\"\",\"currency_name\":\"Euro\",\"country_code\":\"EU\"}]}";
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
         List<ExchangeRate> rates = service.getExchangeRatesForDate(LocalDate.of(2025,12,1));

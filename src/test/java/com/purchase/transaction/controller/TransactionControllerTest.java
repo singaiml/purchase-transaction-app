@@ -47,12 +47,33 @@ class TransactionControllerTest {
         when(transactionService.createTransaction(anyString(), any(LocalDate.class), any(BigDecimal.class)))
             .thenReturn(mockTransaction);
         
-        ResponseEntity<PurchaseTransaction> response = transactionController.createTransaction(description, dateStr, amount);
+        ResponseEntity<PurchaseTransaction> response = transactionController.createTransactionForm(description, dateStr, amount);
         
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         PurchaseTransaction body = response.getBody();
         assertNotNull(body);
         assertEquals(description, body.getDescription());
+    }
+
+    @Test
+    @DisplayName("Should create transaction via JSON and return CREATED status")
+    void testCreateTransactionJsonSuccess() {
+        String description = "JSON Purchase";
+        String dateStr = LocalDate.now().minusDays(2).toString();
+        BigDecimal amount = new BigDecimal("150.00");
+
+        PurchaseTransaction mockTransaction = PurchaseTransaction.create(description, LocalDate.parse(dateStr), amount);
+        when(transactionService.createTransaction(anyString(), any(LocalDate.class), any(BigDecimal.class)))
+            .thenReturn(mockTransaction);
+
+        TransactionRequest req = new TransactionRequest(description, dateStr, amount);
+        ResponseEntity<PurchaseTransaction> response = transactionController.createTransactionJson(req);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        PurchaseTransaction body = response.getBody();
+        assertNotNull(body);
+        assertEquals(description, body.getDescription());
+        assertEquals(amount, body.getAmount());
     }
     
     @Test

@@ -67,7 +67,7 @@ public class TreasuryApiFailureAndCachingIntegrationTest {
     @Test
     public void caching_preventsSecondHttpCall() throws Exception {
         LocalDate date = LocalDate.of(2025, 12, 05);
-        String rateResponse = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.5\",\"exchange_rate_date\":\"2025-12-05\",\"country_code\":\"EU\"}]}";
+        String rateResponse = "{\"data\":[{\"currency_code\":\"EUR\",\"currency_name\":\"Euro\",\"exchange_rate\":\"0.5\",\"record_date\":\"2025-12-05\",\"country_code\":\"EU\"}]}";
 
         // Expect a single HTTP call (first time). The second call should be served from cache.
         server.expect(requestTo(org.hamcrest.Matchers.containsString(date.toString())))

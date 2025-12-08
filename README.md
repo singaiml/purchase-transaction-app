@@ -159,10 +159,24 @@ java -jar target/purchase-transaction-app-1.0.0.jar
 ```
 *The application will start on http://localhost:8080*
 
-### 1. Create a Transaction
+### 1. Create a Transaction (form URL encoded)
 ```bash
 curl -X POST http://localhost:8080/api/v1/transactions \
-  -d "description=Laptop%20Purchase&transactionDate=2025-12-01&amount=1250.50"
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "description=Laptop Purchase" \
+  --data-urlencode "transactionDate=2025-12-01" \
+  --data-urlencode "amount=1250.50"
+```
+
+### 1b. Create a Transaction (JSON)
+```bash
+curl -X POST http://localhost:8080/api/v1/transactions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Laptop Purchase",
+    "transactionDate": "2025-12-01",
+    "amount": 1250.50
+  }'
 ```
 
 ### 2. Get All Transactions

@@ -5,6 +5,7 @@ import com.purchase.transaction.service.IPurchaseTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,15 +26,32 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
     
-    @PostMapping
-    public ResponseEntity<PurchaseTransaction> createTransaction(
+    // JSON body handler - primary endpoint
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PurchaseTransaction> createTransactionJson(@RequestBody TransactionRequest request) {
+        log.debug("Handling JSON request");
+        return createTransactionInternal(request.getDescription(), request.getTransactionDate(), request.getAmount());
+    }
+
+    // Form URL encoded handler - for backward compatibility
+    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PurchaseTransaction> createTransactionForm(
             @RequestParam String description,
             @RequestParam String transactionDate,
             @RequestParam BigDecimal amount) {
+        log.debug("Handling form-urlencoded request");
+        return createTransactionInternal(description, transactionDate, amount);
+    }
+
+    private ResponseEntity<PurchaseTransaction> createTransactionInternal(String description, String transactionDate, BigDecimal amount) {
         log.info("Received request to create transaction: description='{}', date={}, amount={}", description, transactionDate, amount);
-        LocalDate date = LocalDate.parse(transactionDate);
-        PurchaseTransaction transaction = transactionService.createTransaction(description, date, amount);
-        return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
+        try {
+            LocalDate date = LocalDate.parse(transactionDate);
+            PurchaseTransaction transaction = transactionService.createTransaction(description, date, amount);
+            return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new IllegalArgumentException("Invalid transactionDate format. Expected yyyy-MM-dd: " + transactionDate);
+        }
     }
     
     @GetMapping("/{transactionId}")
