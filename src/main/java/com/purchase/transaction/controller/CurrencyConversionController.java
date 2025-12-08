@@ -23,9 +23,22 @@ public class CurrencyConversionController {
     @GetMapping("/{transactionId}")
     public ResponseEntity<ConvertedTransaction> convertTransaction(
             @PathVariable String transactionId,
-            @RequestParam String currency) {
-        log.info("Received request to convert transaction {} to currency: {}", transactionId, currency);
-        ConvertedTransaction converted = transactionService.convertTransaction(transactionId, currency);
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String currency,
+            @RequestParam(required = false) String country_currency_desc) {
+        log.info("Received request to convert transaction {} with country={}, currency={}, country_currency_desc={}", 
+                transactionId, country, currency, country_currency_desc);
+        
+        // Validate that at least one parameter is provided
+        if ((country == null || country.trim().isEmpty()) &&
+            (currency == null || currency.trim().isEmpty()) &&
+            (country_currency_desc == null || country_currency_desc.trim().isEmpty())) {
+            log.warn("No currency parameters provided. Must specify at least one of: country, currency, or country_currency_desc");
+            throw new IllegalArgumentException("Must specify at least one of: country, currency, or country_currency_desc");
+        }
+        
+        ConvertedTransaction converted = transactionService.convertTransaction(
+                transactionId, country, currency, country_currency_desc);
         return ResponseEntity.ok(converted);
     }
     

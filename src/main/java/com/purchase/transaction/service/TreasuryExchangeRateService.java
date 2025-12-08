@@ -223,6 +223,7 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
                     ExchangeRate rate = new ExchangeRate(
                         currencyCode,  // Use mapped currency code (e.g., "EUR" for "Euro")
                         countryCurrencyDesc,  // Full description (e.g., "Euro Zone-Euro")
+                        currencyName,  // Simple currency name (e.g., "Euro")
                         new BigDecimal(exchangeRateStr),
                         effectiveDate,
                         country  // Use country name
@@ -344,54 +345,91 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
     @CircuitBreaker(name = "treasuryApi", fallbackMethod = "getMostRecentExchangeRateWithinRangeFallback")
     @Retry(name = "treasuryApi")
     @Bulkhead(name = "treasuryApi")  // BULKHEAD PATTERN: Resource isolation
-    public Optional<ExchangeRate> getMostRecentExchangeRateWithinRange(String currencyCode, LocalDate startDate, LocalDate endDate) {
-        if (currencyCode == null || currencyCode.trim().isEmpty()) throw new IllegalArgumentException("Currency code cannot be null or empty");
+    public Optional<ExchangeRate> getMostRecentExchangeRateWithinRange(String country, String currency, String country_currency_desc, LocalDate startDate, LocalDate endDate) {
+        // Validate that at least one filter is provided
+        if ((country == null || country.trim().isEmpty()) &&
+            (currency == null || currency.trim().isEmpty()) &&
+            (country_currency_desc == null || country_currency_desc.trim().isEmpty())) {
+            throw new IllegalArgumentException("Must specify at least one of: country, currency, or country_currency_desc");
+        }
+        
         if (startDate == null || endDate == null) throw new IllegalArgumentException("Dates cannot be null");
+        
         try {
-            // Query for rates from startDate onwards (don't limit to endDate in the API call)
-            // The Treasury API may not have data for very recent dates, so we query a broader range
-            // Note: Treasury API doesn't support currency_code filtering, so we query broadly
-            // and filter locally for the requested currency
-            String filter = "record_date:gte:\"%s\""
-                    .formatted(startDate.format(DATE_FORMATTER));
+            // Query for rates from startDate onwards
+            String filter = "record_date:gte:\"%s\"".formatted(startDate.format(DATE_FORMATTER));
             String url = "%s?filter=%s&sort=-record_date&limit=500".formatted(this.treasuryApiUrl, encodeFilter(filter));
-            log.debug("Fetching exchange rates from Treasury API for currency {} from {} onwards", currencyCode, startDate);
+            log.debug("Fetching exchange rates from Treasury API with country={}, currency={}, country_currency_desc={} from {} onwards", 
+                    country, currency, country_currency_desc, startDate);
             @SuppressWarnings("null")
             String response = restTemplate.getForObject(url, String.class);
             List<ExchangeRate> rates = parseExchangeRates(response);
             if (rates.isEmpty()) {
-                log.warn("API returned no exchange rates for currency {} since {}", currencyCode, startDate);
+                log.warn("API returned no exchange rates since {}", startDate);
                 return Optional.empty();
             }
             
-            // Filter rates to find matches for the requested currency code
-            // The API returns currency names, so we need to match against those
-            List<ExchangeRate> currencyMatches = rates.stream()
-                    .filter(rate -> rate.getCurrencyCode().equalsIgnoreCase(currencyCode) || 
-                                  rate.getCurrencyName().toUpperCase().contains(currencyCode.toUpperCase()))
+            // Filter rates to find matches for all provided criteria
+            List<ExchangeRate> filteredRates = rates.stream()
+                    .filter(rate -> matchesCriteria(rate, country, currency, country_currency_desc))
                     .filter(rate -> rate.getEffectiveDate() != null)
                     .filter(rate -> !rate.getEffectiveDate().isAfter(endDate))  // Must be on or before purchase date
-                    .filter(rate -> !rate.getEffectiveDate().isBefore(startDate))  // Must be within 6 months
+                    .filter(rate -> !rate.getEffectiveDate().isBefore(startDate))  // Must be within date range
                     .toList();
             
-            if (currencyMatches.isEmpty()) {
-                log.warn("API returned {} rates but none matching currency {} on or before {} and on/after {}", 
-                        rates.size(), currencyCode, endDate, startDate);
+            if (filteredRates.isEmpty()) {
+                log.warn("API returned {} rates but none matching country={}, currency={}, country_currency_desc={} on or before {} and on/after {}", 
+                        rates.size(), country, currency, country_currency_desc, endDate, startDate);
                 return Optional.empty();
             }
             
             // Pick the most recent (latest) by effective date
-            Optional<ExchangeRate> mostRecent = currencyMatches.stream()
+            Optional<ExchangeRate> mostRecent = filteredRates.stream()
                     .max(Comparator.comparing(ExchangeRate::getEffectiveDate));
             
-            mostRecent.ifPresent(rate -> log.info("Selected exchange rate for {} with effective date: {} (rate: {})", 
-                    currencyCode, rate.getEffectiveDate(), rate.getExchangeRate()));
+            mostRecent.ifPresent(rate -> log.info("Selected exchange rate matching country={}, currency={}, country_currency_desc={} with effective date: {} (rate: {})", 
+                    country, currency, country_currency_desc, rate.getEffectiveDate(), rate.getExchangeRate()));
             
             return mostRecent;
         } catch (Exception e) {
-            log.error("Failed to retrieve exchange rates for currency {} between {} and {}", currencyCode, startDate, endDate, e);
-            throw new ExchangeRateRetrievalException("Failed to retrieve exchange rates for currency: %s".formatted(currencyCode), e);
+            log.error("Failed to retrieve exchange rates for country={}, currency={}, country_currency_desc={} between {} and {}", 
+                    country, currency, country_currency_desc, startDate, endDate, e);
+            throw new ExchangeRateRetrievalException(
+                    String.format("Failed to retrieve exchange rates for country=%s, currency=%s, country_currency_desc=%s", 
+                            country, currency, country_currency_desc), e);
         }
+    }
+    
+    /**
+     * Matches an exchange rate against the provided filter criteria.
+     * User can specify any combination of country, currency, and country_currency_desc.
+     * All provided criteria must match (AND logic).
+     */
+    private boolean matchesCriteria(ExchangeRate rate, String country, String currency, String country_currency_desc) {
+        // Check country match (if provided)
+        if (country != null && !country.trim().isEmpty()) {
+            if (rate.getCountryCode() == null || !rate.getCountryCode().equalsIgnoreCase(country)) {
+                return false;
+            }
+        }
+        
+        // Check currency match (if provided)
+        // Use currencySimpleName (e.g., "Euro") from the Treasury API "currency" field
+        if (currency != null && !currency.trim().isEmpty()) {
+            if (rate.getCurrencySimpleName() == null || !rate.getCurrencySimpleName().equalsIgnoreCase(currency)) {
+                return false;
+            }
+        }
+        
+        // Check country_currency_desc match (if provided)
+        // This should match the full description like "Euro Zone-Euro"
+        if (country_currency_desc != null && !country_currency_desc.trim().isEmpty()) {
+            if (rate.getCurrencyName() == null || !rate.getCurrencyName().equalsIgnoreCase(country_currency_desc)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     // ==============================================================================
@@ -465,24 +503,24 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
      * @return Most recent cached exchange rate within the specified date range, or empty
      */
     private Optional<ExchangeRate> getMostRecentExchangeRateWithinRangeFallback(
-            String currencyCode, LocalDate startDate, LocalDate endDate, Exception ex) {
-        log.warn("Treasury API call failed for currency {} between {} and {}, using fallback. Reason: {}", 
-                currencyCode, startDate, endDate, ex.getMessage());
+            String country, String currency, String country_currency_desc, LocalDate startDate, LocalDate endDate, Exception ex) {
+        log.warn("Treasury API call failed for country={}, currency={}, country_currency_desc={} between {} and {}, using fallback. Reason: {}", 
+                country, currency, country_currency_desc, startDate, endDate, ex.getMessage());
         
-        // Search cache for most recent rate within the 6-month date range (REQ 2.3)
+        // Search cache for most recent rate matching criteria within the date range
         Optional<ExchangeRate> mostRecent = exchangeRateCache.values().stream()
-                .filter(rate -> rate.getCurrencyCode().equalsIgnoreCase(currencyCode))
+                .filter(rate -> matchesCriteria(rate, country, currency, country_currency_desc))
                 .filter(rate -> rate.getEffectiveDate() != null)
                 .filter(rate -> !rate.getEffectiveDate().isBefore(startDate))
                 .filter(rate -> !rate.getEffectiveDate().isAfter(endDate))
                 .max(Comparator.comparing(ExchangeRate::getEffectiveDate));
         
         if (mostRecent.isPresent()) {
-            log.info("Returning cached exchange rate for {} from date {} as fallback (within range {} to {})", 
-                    currencyCode, mostRecent.get().getEffectiveDate(), startDate, endDate);
+            log.info("Returning cached exchange rate matching country={}, currency={}, country_currency_desc={} from date {} as fallback (within range {} to {})", 
+                    country, currency, country_currency_desc, mostRecent.get().getEffectiveDate(), startDate, endDate);
         } else {
-            log.warn("No cached exchange rate available for {} within date range {} to {}", 
-                    currencyCode, startDate, endDate);
+            log.warn("No cached exchange rate available matching country={}, currency={}, country_currency_desc={} within date range {} to {}", 
+                    country, currency, country_currency_desc, startDate, endDate);
         }
         
         return mostRecent;

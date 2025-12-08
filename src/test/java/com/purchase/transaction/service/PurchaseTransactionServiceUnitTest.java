@@ -73,10 +73,10 @@ class PurchaseTransactionServiceUnitTest {
     void convertTransaction_noRate_throws() {
         PurchaseTransaction tx = PurchaseTransaction.create("x", LocalDate.now().minusDays(1), new BigDecimal("1"));
         when(repository.findById("id")).thenReturn(Optional.of(tx));
-        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), any(), any()))
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("Euro Zone"), eq("Euro"), isNull(), any(), any()))
                 .thenReturn(Optional.empty());
 
-        assertThrows(ExchangeRateRetrievalException.class, () -> service.convertTransaction("id", "EUR"));
+        assertThrows(ExchangeRateRetrievalException.class, () -> service.convertTransaction("id", "Euro Zone", "Euro", null));
     }
 
     @Test

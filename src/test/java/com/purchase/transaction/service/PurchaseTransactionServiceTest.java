@@ -167,9 +167,9 @@ class PurchaseTransactionServiceTest {
         // Mock exchangeRateService to return the most recent rate within the 6-month window (2025-06-01)
         ExchangeRate foundRate = new ExchangeRate("EUR", "Euro", new BigDecimal("1.2345"), LocalDate.of(2025,6,1), "EU");
         LocalDate cutoff = purchaseDate.minusMonths(6);
-        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.of(foundRate));
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("Euro Zone"), eq("Euro"), isNull(), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.of(foundRate));
 
-        ConvertedTransaction converted = purchaseTransactionService.convertTransaction(transactionId, "EUR");
+        ConvertedTransaction converted = purchaseTransactionService.convertTransaction(transactionId, "Euro Zone", "Euro", null);
         assertNotNull(converted);
         assertEquals("EUR", converted.getCurrencyCode());
         assertEquals(foundRate.getExchangeRate(), converted.getExchangeRate());
@@ -188,9 +188,9 @@ class PurchaseTransactionServiceTest {
         when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(tx));
 
         LocalDate cutoff = purchaseDate.minusMonths(6);
-        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.empty());
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("Euro Zone"), eq("Euro"), isNull(), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.empty());
 
-        Exception ex = assertThrows(RuntimeException.class, () -> purchaseTransactionService.convertTransaction(transactionId, "EUR"));
+        Exception ex = assertThrows(RuntimeException.class, () -> purchaseTransactionService.convertTransaction(transactionId, "Euro Zone", "Euro", null));
         assertTrue(ex.getMessage().contains("Cannot convert purchase to target currency"));
     }
 
@@ -206,9 +206,9 @@ class PurchaseTransactionServiceTest {
 
         ExchangeRate rate = new ExchangeRate("EUR", "Euro", new BigDecimal("0.333333"), LocalDate.of(2025,11,30), "EU");
         LocalDate cutoff = purchaseDate.minusMonths(6);
-        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("EUR"), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.of(rate));
+        when(exchangeRateService.getMostRecentExchangeRateWithinRange(eq("Euro Zone"), eq("Euro"), isNull(), eq(cutoff), eq(purchaseDate))).thenReturn(Optional.of(rate));
 
-        ConvertedTransaction converted = purchaseTransactionService.convertTransaction(transactionId, "EUR");
+        ConvertedTransaction converted = purchaseTransactionService.convertTransaction(transactionId, "Euro Zone", "Euro", null);
         // 100 * 0.333333 = 33.3333 -> rounded to 33.33
         assertEquals(new BigDecimal("33.33"), converted.getConvertedAmount());
     }

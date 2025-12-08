@@ -7,6 +7,7 @@ import java.time.LocalDate;
 public class ExchangeRate {
     private String currencyCode;
     private String currencyName;
+    private String currencySimpleName; // Raw currency name from API (e.g., "Euro")
     private BigDecimal exchangeRate;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate effectiveDate;
@@ -18,6 +19,15 @@ public class ExchangeRate {
     public ExchangeRate(String currencyCode, String currencyName, BigDecimal exchangeRate, LocalDate effectiveDate, String countryCode) {
         this.currencyCode = currencyCode;
         this.currencyName = currencyName;
+        this.exchangeRate = exchangeRate;
+        this.effectiveDate = effectiveDate;
+        this.countryCode = countryCode;
+    }
+    
+    public ExchangeRate(String currencyCode, String currencyName, String currencySimpleName, BigDecimal exchangeRate, LocalDate effectiveDate, String countryCode) {
+        this.currencyCode = currencyCode;
+        this.currencyName = currencyName;
+        this.currencySimpleName = currencySimpleName;
         this.exchangeRate = exchangeRate;
         this.effectiveDate = effectiveDate;
         this.countryCode = countryCode;
@@ -37,6 +47,14 @@ public class ExchangeRate {
     
     public void setCurrencyName(String currencyName) {
         this.currencyName = currencyName;
+    }
+    
+    public String getCurrencySimpleName() {
+        return currencySimpleName;
+    }
+    
+    public void setCurrencySimpleName(String currencySimpleName) {
+        this.currencySimpleName = currencySimpleName;
     }
     
     public BigDecimal getExchangeRate() {

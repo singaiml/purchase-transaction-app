@@ -66,7 +66,7 @@ class TreasuryExchangeRateServiceUnitTest {
         String json = "{\"data\":[{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.3\",\"record_date\":\"2025-01-01\",\"country\":\"Euro Zone\"},{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.4\",\"record_date\":\"2025-06-30\",\"country\":\"Euro Zone\"}]}";
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
-        Optional<ExchangeRate> opt = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
+        Optional<ExchangeRate> opt = service.getMostRecentExchangeRateWithinRange("Euro Zone", "Euro", null, LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
         assertTrue(opt.isPresent());
         assertEquals(new BigDecimal("0.4"), opt.get().getExchangeRate());
         server.verify();
@@ -97,10 +97,11 @@ class TreasuryExchangeRateServiceUnitTest {
         assertThrows(IllegalArgumentException.class, () -> service.getExchangeRateForCurrency("", LocalDate.now()));
         assertThrows(IllegalArgumentException.class, () -> service.getExchangeRateForCurrency("EUR", null));
 
-        // getMostRecentExchangeRateWithinRange null checks
-        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange(null, LocalDate.now(), LocalDate.now()));
-        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("EUR", null, LocalDate.now()));
-        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.now(), null));
+        // getMostRecentExchangeRateWithinRange null checks - at least one parameter required
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange(null, null, null, LocalDate.now(), LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("", "", "", LocalDate.now(), LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("Euro Zone", "Euro", null, null, LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("Euro Zone", "Euro", null, LocalDate.now(), null));
     }
 
     @Test
@@ -119,7 +120,7 @@ class TreasuryExchangeRateServiceUnitTest {
         String json = "{\"data\":[]}"; // empty data array
         server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
-        Optional<ExchangeRate> opt = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
+        Optional<ExchangeRate> opt = service.getMostRecentExchangeRateWithinRange("Euro Zone", "Euro", null, LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
         assertFalse(opt.isPresent());
         server.verify();
     }

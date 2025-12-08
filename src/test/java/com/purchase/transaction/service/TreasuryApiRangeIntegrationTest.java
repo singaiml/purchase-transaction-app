@@ -74,7 +74,7 @@ public class TreasuryApiRangeIntegrationTest {
                 when(repo.findById(tx.getTransactionId())).thenReturn(Optional.of(tx));
 
                 // Execute conversion; should find the rate returned by the single API call
-                ConvertedTransaction converted = purchaseService.convertTransaction(tx.getTransactionId(), "EUR");
+                ConvertedTransaction converted = purchaseService.convertTransaction(tx.getTransactionId(), "Euro Zone", "Euro", null);
 
                 // Assert the converted amount is 100.00 * 0.3333 rounded to 2 decimals -> 33.33
                 assertThat(converted).isNotNull();

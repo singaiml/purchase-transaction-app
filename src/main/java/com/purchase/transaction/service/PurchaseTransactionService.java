@@ -95,13 +95,19 @@ public class PurchaseTransactionService implements IPurchaseTransactionService {
     }
     
     @Override
-    public ConvertedTransaction convertTransaction(String transactionId, String currencyCode) {
-        log.info("Converting transaction {} to currency: {}", transactionId, currencyCode);
+    public ConvertedTransaction convertTransaction(String transactionId, String country, String currency, String country_currency_desc) {
+        log.info("Converting transaction {} with country={}, currency={}, country_currency_desc={}", 
+                transactionId, country, currency, country_currency_desc);
         
         if (transactionId == null || transactionId.trim().isEmpty()) 
             throw new IllegalArgumentException("Transaction ID cannot be null or empty");
-        if (currencyCode == null || currencyCode.trim().isEmpty()) 
-            throw new IllegalArgumentException("Currency code cannot be null or empty");
+        
+        // At least one filter parameter must be provided
+        if ((country == null || country.trim().isEmpty()) &&
+            (currency == null || currency.trim().isEmpty()) &&
+            (country_currency_desc == null || country_currency_desc.trim().isEmpty())) {
+            throw new IllegalArgumentException("Must specify at least one of: country, currency, or country_currency_desc");
+        }
         
         PurchaseTransaction transaction = getTransaction(transactionId);
         
@@ -109,10 +115,11 @@ public class PurchaseTransactionService implements IPurchaseTransactionService {
         LocalDate purchaseDate = transaction.getTransactionDate();
         LocalDate cutoffDate = purchaseDate.minusMonths(6);
 
-        Optional<ExchangeRate> maybeRate = exchangeRateService.getMostRecentExchangeRateWithinRange(currencyCode.toUpperCase(), cutoffDate, purchaseDate);
+        Optional<ExchangeRate> maybeRate = exchangeRateService.getMostRecentExchangeRateWithinRange(
+                country, currency, country_currency_desc, cutoffDate, purchaseDate);
         if (maybeRate.isEmpty()) {
-            String msg = String.format("Cannot convert purchase to target currency %s: no exchange rate within 6 months on or before %s",
-                    currencyCode, purchaseDate);
+            String msg = String.format("Cannot convert purchase to target currency (country=%s, currency=%s, country_currency_desc=%s): no exchange rate within 6 months on or before %s",
+                    country, currency, country_currency_desc, purchaseDate);
             log.error(msg);
             throw new ExchangeRateRetrievalException(msg);
         }
@@ -134,7 +141,8 @@ public class PurchaseTransactionService implements IPurchaseTransactionService {
             exchangeRate.getEffectiveDate()
         );
         
-        log.info("Successfully converted transaction {} to {}: {} -> {}", transactionId, currencyCode, transaction.getAmount(), convertedAmount);
+        log.info("Successfully converted transaction {} to (country={}, currency={}, country_currency_desc={}): {} -> {}", 
+                transactionId, country, currency, country_currency_desc, transaction.getAmount(), convertedAmount);
         return converted;
     }
     

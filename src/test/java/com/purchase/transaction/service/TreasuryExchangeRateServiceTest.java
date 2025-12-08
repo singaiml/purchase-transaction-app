@@ -51,7 +51,7 @@ class TreasuryExchangeRateServiceTest {
         String json = "{\"data\":[{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.2\",\"record_date\":\"2025-01-01\",\"country\":\"Euro Zone\"},{\"currency\":\"Euro\",\"country_currency_desc\":\"Euro Zone-Euro\",\"exchange_rate\":\"0.4\",\"record_date\":\"2025-06-01\",\"country\":\"Euro Zone\"}]}";
         mockServer.expect(once(), requestTo(org.hamcrest.Matchers.containsString("filter="))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
-        Optional<ExchangeRate> maybe = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
+        Optional<ExchangeRate> maybe = service.getMostRecentExchangeRateWithinRange("Euro Zone", "Euro", null, LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
         assertTrue(maybe.isPresent());
         ExchangeRate rate = maybe.get();
         assertEquals(new BigDecimal("0.4"), rate.getExchangeRate());

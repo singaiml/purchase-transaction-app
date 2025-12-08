@@ -37,28 +37,30 @@ class CurrencyConversionControllerTest {
     @DisplayName("Should convert transaction to target currency with OK status")
     void testConvertTransactionSuccess() {
         String transactionId = "tx-123";
-        String currency = "EUR";
+        String country = "Euro Zone";
+        String currency = "Euro";
+        String country_currency_desc = null;
         
         ConvertedTransaction mockConverted = new ConvertedTransaction(
             transactionId,
             "Test Purchase",
             LocalDate.now(),
             new BigDecimal("100.00"),
-            currency,
+            "EUR",
             new BigDecimal("1.10"),
             new BigDecimal("110.00"),
             LocalDate.now()
         );
         
-        when(transactionService.convertTransaction(transactionId, currency)).thenReturn(mockConverted);
+        when(transactionService.convertTransaction(transactionId, country, currency, country_currency_desc)).thenReturn(mockConverted);
         
-        ResponseEntity<ConvertedTransaction> response = currencyConversionController.convertTransaction(transactionId, currency);
+        ResponseEntity<ConvertedTransaction> response = currencyConversionController.convertTransaction(transactionId, country, currency, country_currency_desc);
         
         assertEquals(HttpStatus.OK, response.getStatusCode());
         ConvertedTransaction body = response.getBody();
         assertNotNull(body);
         assertEquals(transactionId, body.getTransactionId());
-        assertEquals(currency, body.getCurrencyCode());
+        assertEquals("EUR", body.getCurrencyCode());
     }
     
     @Test

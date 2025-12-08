@@ -10,6 +10,6 @@ public interface IPurchaseTransactionService {
     PurchaseTransaction getTransaction(String transactionId);
     List<PurchaseTransaction> getAllTransactions();
     void deleteTransaction(String transactionId);
-    ConvertedTransaction convertTransaction(String transactionId, String currencyCode);
+    ConvertedTransaction convertTransaction(String transactionId, String country, String currency, String country_currency_desc);
     List<String> getAvailableCurrencies();
 }
