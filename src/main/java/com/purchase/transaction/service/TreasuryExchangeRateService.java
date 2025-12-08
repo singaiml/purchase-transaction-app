@@ -414,7 +414,8 @@ public class TreasuryExchangeRateService implements IExchangeRateService {
         }
         
         // Check currency match (if provided)
-        // Use currencySimpleName (e.g., "Euro") from the Treasury API "currency" field
+        // This matches the Treasury API's "currency" field (e.g., "Euro", "Rupee", "Yen")
+        // NOT ISO codes - use additional parameters for disambiguation
         if (currency != null && !currency.trim().isEmpty()) {
             if (rate.getCurrencySimpleName() == null || !rate.getCurrencySimpleName().equalsIgnoreCase(currency)) {
                 return false;

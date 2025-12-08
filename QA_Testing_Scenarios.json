@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "purchase-transaction-app-tests",
 		"name": "Purchase Transaction App - Complete QA Test Suite",
-		"description": "Comprehensive test collection covering:\n1. Transaction CRUD Operations (original requirements)\n2. Multi-parameter Currency Conversion (with country, currency, country_currency_desc)\n3. Edge cases and error handling\n4. Validation scenarios\n5. Ambiguous currency disambiguation (India Rupee vs Pakistan Rupee)",
+		"description": "Comprehensive test collection covering:\n1. Transaction CRUD Operations (original requirements)\n2. Multi-parameter Currency Conversion (with country, currency, country_currency_desc)\n3. Edge cases and error handling\n4. Validation scenarios\n5. Ambiguous currency disambiguation (India Rupee vs Pakistan Rupee)\n\nNOTE: All currency parameters use Treasury API field values (Euro, Yen, Rupee) - NOT ISO codes (EUR, JPY, INR)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
