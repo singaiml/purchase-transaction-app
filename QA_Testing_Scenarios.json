@@ -1,26 +1,14 @@
 {
 	"info": {
-		"_postman_id": "purchase-transaction-app-tests",
+		"_postman_id": "c846d1e6-24c3-4800-942e-8f03342a0803",
 		"name": "Purchase Transaction App - Complete QA Test Suite",
-		"description": "Comprehensive test collection covering:\n1. Transaction CRUD Operations (original requirements)\n2. Multi-parameter Currency Conversion (with country, currency, country_currency_desc)\n3. Edge cases and error handling\n4. Validation scenarios\n5. Ambiguous currency disambiguation (India Rupee vs Pakistan Rupee)\n\nNOTE: All currency parameters use Treasury API field values (Euro, Yen, Rupee) - NOT ISO codes (EUR, JPY, INR)",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"description": "Comprehensive test collection covering:\n\n1. Transaction CRUD Operations (original requirements)\n    \n2. Multi-parameter Currency Conversion (with country, currency, country_currency_desc)\n    \n3. Edge cases and error handling\n    \n4. Validation scenarios\n    \n5. Ambiguous currency disambiguation (India Rupee vs Pakistan Rupee)\n    \n\nNOTE: All currency parameters use Treasury API field values (Euro, Yen, Rupee) - NOT ISO codes (EUR, JPY, INR)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3722967"
 	},
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:8080",
-			"type": "string"
-		},
-		{
-			"key": "testTransactionId",
-			"value": "",
-			"type": "string"
-		}
-	],
 	"item": [
 		{
 			"name": "Transaction CRUD Operations",
-			"description": "Original requirements: Store and retrieve purchase transactions",
 			"item": [
 				{
 					"name": "1.1 Create New Transaction - Valid",
@@ -46,7 +34,9 @@
 									"    pm.expect(jsonData.transactionDate).to.eql('2025-12-01');",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -60,12 +50,18 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"description\": \"Postman Test Purchase\",\n    \"transactionDate\": \"2025-12-01\",\n    \"transactionAmountUsd\": 150.00\n}"
+							"raw": "{\n    \"description\": \"Postman Test Purchase\",\n    \"transactionDate\": \"2025-12-01\",\n    \"amount\": 150.00\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/transactions",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "transactions"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions"
+							]
 						},
 						"description": "Create a new transaction with valid data"
 					},
@@ -105,8 +101,14 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/transactions",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "transactions"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions"
+							]
 						},
 						"description": "Retrieve all stored transactions"
 					},
@@ -137,8 +139,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/transactions/{{testTransactionId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "transactions", "{{testTransactionId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{testTransactionId}}"
+							]
 						},
 						"description": "Retrieve a specific transaction by ID"
 					},
@@ -160,7 +169,9 @@
 									"    pm.expect(jsonData).to.have.property('error');",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -174,12 +185,18 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"description\": \"Invalid Date Test\",\n    \"transactionDate\": \"12/01/2025\",\n    \"transactionAmountUsd\": 100.00\n}"
+							"raw": "{\n    \"description\": \"Invalid Date Test\",\n    \"transactionDate\": \"12/01/2025\",\n    \"amount\": 100.00\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/transactions",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "transactions"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions"
+							]
 						},
 						"description": "Test validation: invalid date format should be rejected"
 					},
@@ -211,8 +228,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/transactions/non-existent-id-12345",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "transactions", "non-existent-id-12345"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"non-existent-id-12345"
+							]
 						},
 						"description": "Test error handling for non-existent transaction"
 					},
@@ -238,18 +262,25 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/transactions/{{testTransactionId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "transactions", "{{testTransactionId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{testTransactionId}}"
+							]
 						},
 						"description": "Delete a transaction by ID"
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Original requirements: Store and retrieve purchase transactions"
 		},
 		{
 			"name": "Currency Conversion - Single Parameter",
-			"description": "Test flexible currency conversion with single parameters (unambiguous queries)",
 			"item": [
 				{
 					"name": "2.1 Convert to EUR - Using Country + Currency",
@@ -292,8 +323,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Euro Zone&currency=Euro",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -340,8 +378,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Japan&currency=Yen",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -383,8 +428,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Japan",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -421,8 +473,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?currency=Euro",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "currency",
@@ -459,8 +518,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country_currency_desc=Euro Zone-Euro",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country_currency_desc",
@@ -472,11 +538,11 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Test flexible currency conversion with single parameters (unambiguous queries)"
 		},
 		{
 			"name": "Currency Conversion - Ambiguous Currency Disambiguation",
-			"description": "CRITICAL TEST: Handle currencies with same name (Rupee) from different countries",
 			"item": [
 				{
 					"name": "3.1 India Rupee Conversion",
@@ -510,8 +576,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=India&currency=Rupee",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -566,8 +639,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Pakistan&currency=Rupee",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -609,8 +689,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country_currency_desc=India-Rupee",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country_currency_desc",
@@ -622,11 +709,11 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "CRITICAL TEST: Handle currencies with same name (Rupee) from different countries"
 		},
 		{
 			"name": "Currency Conversion - AND Logic Validation",
-			"description": "Test that multiple parameters use AND logic (all must match)",
 			"item": [
 				{
 					"name": "4.1 All 3 Parameters Matching",
@@ -655,8 +742,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=India&currency=Rupee&country_currency_desc=India-Rupee",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -703,8 +797,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Pakistan&currency=Rupee&country_currency_desc=India-Rupee",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -749,8 +850,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=India&currency=Euro",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -766,11 +874,11 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Test that multiple parameters use AND logic (all must match)"
 		},
 		{
 			"name": "Currency Conversion - Error Handling",
-			"description": "Test validation and error scenarios",
 			"item": [
 				{
 					"name": "5.1 No Parameters Provided",
@@ -800,8 +908,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							]
 						},
 						"description": "VALIDATION TEST: Should return 400 when no currency parameters provided"
 					},
@@ -833,8 +948,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/non-existent-tx-id?country=Japan&currency=Yen",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "non-existent-tx-id"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"non-existent-tx-id"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -875,8 +997,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=NonExistentCountry&currency=FakeCurrency",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -917,8 +1046,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=&currency=&country_currency_desc=",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -938,14 +1074,14 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Test validation and error scenarios"
 		},
 		{
 			"name": "Get Available Currencies",
-			"description": "Test the available currencies endpoint",
 			"item": [
 				{
-					"name": "6.1 Get Available Currencies List",
+					"name": "6.1 Get Available Currencies List - MUST Fail",
 					"event": [
 						{
 							"listen": "test",
@@ -976,18 +1112,25 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/currencies",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "currencies"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"currencies"
+							]
 						},
 						"description": "Retrieve list of all available currency codes for conversion"
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Test the available currencies endpoint"
 		},
 		{
 			"name": "Edge Cases and Special Scenarios",
-			"description": "Test special edge cases and boundary conditions",
 			"item": [
 				{
 					"name": "7.1 Case Insensitive Currency Matching",
@@ -1014,8 +1157,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=euro zone&currency=EURO",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -1062,8 +1212,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Euro Zone&currency=Euro",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -1117,8 +1274,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Euro Zone&currency=Euro",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversions",
+								"7178f1ff-d207-4315-ab4a-c21a6a7c1b03"
+							],
 							"query": [
 								{
 									"key": "country",
@@ -1134,7 +1298,28 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Test special edge cases and boundary conditions"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "testTransactionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "indiaRupeeRate",
+			"value": ""
+		},
+		{
+			"key": "pakistanRupeeRate",
+			"value": ""
 		}
 	]
 }
