@@ -43,4 +43,28 @@ class FileBasedTransactionRepositoryUnitTest {
         repo.deleteAll();
         assertEquals(0, repo.count());
     }
+
+    @Test
+    void nullAndEmptyInputs_behaveCorrectly() {
+        String repoFile = tempDir.resolve("repo.json").toString();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        FileBasedTransactionRepository repo = new FileBasedTransactionRepository(mapper, repoFile);
+
+        // save null should throw
+        assertThrows(IllegalArgumentException.class, () -> repo.save(null));
+
+        // findById with null/empty should return empty
+        assertFalse(repo.findById(null).isPresent());
+        assertFalse(repo.findById("").isPresent());
+
+        // deleteById with null/empty should return false
+        assertFalse(repo.deleteById(null));
+        assertFalse(repo.deleteById(""));
+
+        // existsById with null/empty should be false
+        assertFalse(repo.existsById(null));
+        assertFalse(repo.existsById(""));
+    }
 }

@@ -86,4 +86,20 @@ class TreasuryExchangeRateServiceUnitTest {
 
         server.verify();
     }
+
+    @Test
+    void argumentValidation_throwsForNulls() {
+        // getExchangeRatesForDate null
+        assertThrows(IllegalArgumentException.class, () -> service.getExchangeRatesForDate(null));
+
+        // getExchangeRateForCurrency null/empty
+        assertThrows(IllegalArgumentException.class, () -> service.getExchangeRateForCurrency(null, LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getExchangeRateForCurrency("", LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getExchangeRateForCurrency("EUR", null));
+
+        // getMostRecentExchangeRateWithinRange null checks
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange(null, LocalDate.now(), LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("EUR", null, LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.now(), null));
+    }
 }
