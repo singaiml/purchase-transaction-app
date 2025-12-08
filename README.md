@@ -221,9 +221,9 @@ java -jar target/purchase-transaction-app-1.0.0.jar --logging.level.root=DEBUG
 
 ## Next Steps
 1. **Explore the API**: Use the examples above to test endpoints.
-2. **Run the Tests**: Execute `mvn test` to see all test cases.
+2. **Run the Tests**: Execute `mvn test` to see all test cases. You can use the QA_Testing_Scenarios.json file for running test on each scenario.
 3. **Modify Data**: Create your own transactions and test the endpoints.
-4. **Extend Features**: Add new endpoints or services as needed.
+
 
 ## Conclusion  
 
@@ -234,6 +234,6 @@ This is a complete, production-ready application that:
 ✅ Converts transactions to any supported currency  
 ✅ Provides REST API for easy integration  
 ✅ Includes comprehensive error handling  
-✅ Is fully testable with 40+ test cases  
-✅ Follows enterprise architecture patterns
+✅ Is fully testable with 80+ test cases  
+✅ Follows enterprise architecture patterns like Circuit Breaker, Resilience, Connection Pooling, Bulkheading and Graceful Degradation.
 
