@@ -5,11 +5,11 @@
   "amount" : 100.00,
   "createdAt" : "2025-12-07"
 }, {
-  "transactionId" : "8d020ff6-5661-478e-be5f-3d2a3322288a",
-  "description" : "Test purchase",
-  "transactionDate" : "2025-11-08",
-  "amount" : 123.45,
-  "createdAt" : "2025-12-07"
+  "transactionId" : "52c681b5-7585-4364-8ad6-de2f6601e565",
+  "description" : "Valid date format test",
+  "transactionDate" : "2025-06-15",
+  "amount" : 50.00,
+  "createdAt" : "2025-12-08"
 }, {
   "transactionId" : "a2522dfc-6652-420d-96be-0f7623b79a7f",
   "description" : "Office Supplies",
@@ -29,17 +29,17 @@
   "amount" : 599.99,
   "createdAt" : "2025-12-04"
 }, {
-  "transactionId" : "55d1863c-8a05-47e0-800f-05a44ad3887e",
-  "description" : "Laptop Purchase",
-  "transactionDate" : "2025-12-01",
-  "amount" : 1250.50,
-  "createdAt" : "2025-12-04"
-}, {
   "transactionId" : "1f319942-c2ac-483d-9ef8-0d5c93c1b9a6",
   "description" : "Starbucks Coffee",
   "transactionDate" : "2024-11-06",
   "amount" : 3.89,
   "createdAt" : "2025-12-07"
+}, {
+  "transactionId" : "3b663ad3-c691-493e-a4c8-cc7dbb748de9",
+  "description" : "Exactly fifty characters description test here!!",
+  "transactionDate" : "2025-12-07",
+  "amount" : 25.00,
+  "createdAt" : "2025-12-08"
 }, {
   "transactionId" : "124d2c4e-46b9-4b78-9ad2-a3f35aaa28ff",
   "description" : "MacBook Pro Purchase",
@@ -47,9 +47,39 @@
   "amount" : 2500.00,
   "createdAt" : "2025-12-05"
 }, {
+  "transactionId" : "23367a61-ce30-4e73-aac5-09abe382a804",
+  "description" : "Very old transaction",
+  "transactionDate" : "2020-01-01",
+  "amount" : 100.00,
+  "createdAt" : "2025-12-08"
+}, {
+  "transactionId" : "b3dbea64-ae57-4260-9fc5-803c4636aaaa",
+  "description" : "Tesla Model 3 purchase",
+  "transactionDate" : "2025-12-07",
+  "amount" : 123.45,
+  "createdAt" : "2025-12-08"
+}, {
+  "transactionId" : "8d020ff6-5661-478e-be5f-3d2a3322288a",
+  "description" : "Test purchase",
+  "transactionDate" : "2025-11-08",
+  "amount" : 123.45,
+  "createdAt" : "2025-12-07"
+}, {
+  "transactionId" : "55d1863c-8a05-47e0-800f-05a44ad3887e",
+  "description" : "Laptop Purchase",
+  "transactionDate" : "2025-12-01",
+  "amount" : 1250.50,
+  "createdAt" : "2025-12-04"
+}, {
   "transactionId" : "5669638f-e1d2-4ccc-b5fa-96822d73778c",
   "description" : "Starbucks Coffee",
   "transactionDate" : "2024-11-06",
   "amount" : 3.89,
   "createdAt" : "2025-12-07"
+}, {
+  "transactionId" : "18f58ca9-ca81-4015-b976-8b6080162445",
+  "description" : "Rounding test",
+  "transactionDate" : "2025-12-07",
+  "amount" : 100.00,
+  "createdAt" : "2025-12-08"
 } ]

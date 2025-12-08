@@ -2,6 +2,7 @@ package com.purchase.transaction.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.purchase.transaction.model.ExchangeRate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,16 +51,21 @@ public class TreasuryApiFailureAndCachingIntegrationTest {
     }
 
     @Test
-    public void getExchangeRate_throwsWhenApiFails() throws Exception {
-        LocalDate date = LocalDate.of(2025, 12, 05);
+    public void getExchangeRate_usesFallbackWhenApiFails() throws Exception {
+        LocalDate date = LocalDate.of(2025, 12, 06);
 
-        // Simulate server error for the requested date
-        server.expect(requestTo(org.hamcrest.Matchers.containsString(date.toString())))
+        // Simulate server error. With circuit breaker and fallback configured,
+        // the fallback is invoked after the first failure
+        server.expect(org.springframework.test.web.client.ExpectedCount.once(),
+                requestTo(org.hamcrest.Matchers.containsString(date.toString())))
                 .andRespond(withServerError());
 
-        // The service wraps exceptions in ExchangeRateRetrievalException
-        assertThatThrownBy(() -> treasuryService.getExchangeRateForCurrency("EUR", date))
-                .isInstanceOf(RuntimeException.class);
+        // With circuit breaker and fallback patterns, when API fails
+        // the fallback returns empty Optional (no cached data for this date)
+        Optional<ExchangeRate> result = treasuryService.getExchangeRateForCurrency("EUR", date);
+        
+        // Should return empty Optional (from fallback with no cache) rather than throwing exception
+        assertThat(result).isEmpty();
 
         server.verify();
     }
