@@ -1,0 +1,1140 @@
+{
+	"info": {
+		"_postman_id": "purchase-transaction-app-tests",
+		"name": "Purchase Transaction App - Complete QA Test Suite",
+		"description": "Comprehensive test collection covering:\n1. Transaction CRUD Operations (original requirements)\n2. Multi-parameter Currency Conversion (with country, currency, country_currency_desc)\n3. Edge cases and error handling\n4. Validation scenarios\n5. Ambiguous currency disambiguation (India Rupee vs Pakistan Rupee)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "testTransactionId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Transaction CRUD Operations",
+			"description": "Original requirements: Store and retrieve purchase transactions",
+			"item": [
+				{
+					"name": "1.1 Create New Transaction - Valid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has transactionId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('transactionId');",
+									"    pm.collectionVariables.set('testTransactionId', jsonData.transactionId);",
+									"});",
+									"",
+									"pm.test(\"Transaction data matches request\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.description).to.eql('Postman Test Purchase');",
+									"    pm.expect(jsonData.transactionAmountUsd).to.eql(150.00);",
+									"    pm.expect(jsonData.transactionDate).to.eql('2025-12-01');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Postman Test Purchase\",\n    \"transactionDate\": \"2025-12-01\",\n    \"transactionAmountUsd\": 150.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transactions"]
+						},
+						"description": "Create a new transaction with valid data"
+					},
+					"response": []
+				},
+				{
+					"name": "1.2 Get All Transactions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"Transactions have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var transaction = jsonData[0];",
+									"    pm.expect(transaction).to.have.property('transactionId');",
+									"    pm.expect(transaction).to.have.property('description');",
+									"    pm.expect(transaction).to.have.property('transactionAmountUsd');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transactions"]
+						},
+						"description": "Retrieve all stored transactions"
+					},
+					"response": []
+				},
+				{
+					"name": "1.3 Get Transaction by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Transaction ID matches\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.transactionId).to.eql(pm.collectionVariables.get('testTransactionId'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transactions/{{testTransactionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transactions", "{{testTransactionId}}"]
+						},
+						"description": "Retrieve a specific transaction by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "1.4 Create Transaction - Invalid Date Format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates validation failure\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Invalid Date Test\",\n    \"transactionDate\": \"12/01/2025\",\n    \"transactionAmountUsd\": 100.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transactions"]
+						},
+						"description": "Test validation: invalid date format should be rejected"
+					},
+					"response": []
+				},
+				{
+					"name": "1.5 Get Transaction - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404 Not Found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates not found\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.eql('Not Found');",
+									"    pm.expect(jsonData.message).to.include('not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transactions/non-existent-id-12345",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transactions", "non-existent-id-12345"]
+						},
+						"description": "Test error handling for non-existent transaction"
+					},
+					"response": []
+				},
+				{
+					"name": "1.6 Delete Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204 No Content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transactions/{{testTransactionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transactions", "{{testTransactionId}}"]
+						},
+						"description": "Delete a transaction by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Currency Conversion - Single Parameter",
+			"description": "Test flexible currency conversion with single parameters (unambiguous queries)",
+			"item": [
+				{
+					"name": "2.1 Convert to EUR - Using Country + Currency",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Currency code is EUR\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('EUR');",
+									"});",
+									"",
+									"pm.test(\"Has exchange rate and converted amount\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('exchangeRate');",
+									"    pm.expect(jsonData).to.have.property('convertedAmount');",
+									"    pm.expect(jsonData.exchangeRate).to.be.a('number');",
+									"    pm.expect(jsonData.convertedAmount).to.be.a('number');",
+									"});",
+									"",
+									"pm.test(\"Exchange rate date is within 6 months\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var transactionDate = new Date(jsonData.transactionDate);",
+									"    var rateDate = new Date(jsonData.exchangeRateDate);",
+									"    var diffMonths = (transactionDate - rateDate) / (1000 * 60 * 60 * 24 * 30);",
+									"    pm.expect(diffMonths).to.be.below(6);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Euro Zone&currency=Euro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Euro Zone"
+								},
+								{
+									"key": "currency",
+									"value": "Euro"
+								}
+							]
+						},
+						"description": "Convert using country and currency parameters (unambiguous case)"
+					},
+					"response": []
+				},
+				{
+					"name": "2.2 Convert to JPY - Using Country + Currency",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Currency code is JPY\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('JPY');",
+									"});",
+									"",
+									"pm.test(\"Converted amount is reasonable for JPY\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    // JPY has high exchange rate (e.g., 148 Yen per USD)",
+									"    pm.expect(jsonData.convertedAmount).to.be.above(jsonData.originalAmountUsd);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Japan&currency=Yen",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Japan"
+								},
+								{
+									"key": "currency",
+									"value": "Yen"
+								}
+							]
+						},
+						"description": "Convert to Japanese Yen using country and currency"
+					},
+					"response": []
+				},
+				{
+					"name": "2.3 Convert Using Only Country Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has conversion data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('currencyCode');",
+									"    pm.expect(jsonData).to.have.property('exchangeRate');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Japan",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Japan"
+								}
+							]
+						},
+						"description": "Test single parameter: only country specified"
+					},
+					"response": []
+				},
+				{
+					"name": "2.4 Convert Using Only Currency Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Currency code is EUR\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('EUR');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?currency=Euro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "currency",
+									"value": "Euro"
+								}
+							]
+						},
+						"description": "Test single parameter: only currency specified (unambiguous case)"
+					},
+					"response": []
+				},
+				{
+					"name": "2.5 Convert Using Full country_currency_desc",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Currency code is EUR\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('EUR');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country_currency_desc=Euro Zone-Euro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country_currency_desc",
+									"value": "Euro Zone-Euro"
+								}
+							]
+						},
+						"description": "Test using the full country_currency_desc parameter (most explicit)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Currency Conversion - Ambiguous Currency Disambiguation",
+			"description": "CRITICAL TEST: Handle currencies with same name (Rupee) from different countries",
+			"item": [
+				{
+					"name": "3.1 India Rupee Conversion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Currency code is RUPEE\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('RUPEE');",
+									"});",
+									"",
+									"pm.test(\"Exchange rate matches India Rupee range\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    // Indian Rupee typically around 80-90 per USD",
+									"    pm.expect(jsonData.exchangeRate).to.be.within(70, 100);",
+									"    pm.collectionVariables.set('indiaRupeeRate', jsonData.exchangeRate);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=India&currency=Rupee",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "India"
+								},
+								{
+									"key": "currency",
+									"value": "Rupee"
+								}
+							]
+						},
+						"description": "Convert to Indian Rupee using country parameter to disambiguate"
+					},
+					"response": []
+				},
+				{
+					"name": "3.2 Pakistan Rupee Conversion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Currency code is RUPEE\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('RUPEE');",
+									"});",
+									"",
+									"pm.test(\"Exchange rate matches Pakistan Rupee range\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    // Pakistani Rupee typically around 250-300 per USD",
+									"    pm.expect(jsonData.exchangeRate).to.be.within(200, 350);",
+									"    pm.collectionVariables.set('pakistanRupeeRate', jsonData.exchangeRate);",
+									"});",
+									"",
+									"pm.test(\"Pakistan Rupee rate differs from India Rupee rate\", function () {",
+									"    var pakistanRate = pm.response.json().exchangeRate;",
+									"    var indiaRate = pm.collectionVariables.get('indiaRupeeRate');",
+									"    pm.expect(pakistanRate).to.not.eql(indiaRate);",
+									"    pm.expect(Math.abs(pakistanRate - indiaRate)).to.be.above(50);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Pakistan&currency=Rupee",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Pakistan"
+								},
+								{
+									"key": "currency",
+									"value": "Rupee"
+								}
+							]
+						},
+						"description": "Convert to Pakistani Rupee - PROVES disambiguation works (different rate than India)"
+					},
+					"response": []
+				},
+				{
+					"name": "3.3 India Rupee Using Full Description",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Exchange rate matches India Rupee\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var indiaRate = pm.collectionVariables.get('indiaRupeeRate');",
+									"    pm.expect(jsonData.exchangeRate).to.eql(indiaRate);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country_currency_desc=India-Rupee",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country_currency_desc",
+									"value": "India-Rupee"
+								}
+							]
+						},
+						"description": "Alternative way to specify India Rupee using full description"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Currency Conversion - AND Logic Validation",
+			"description": "Test that multiple parameters use AND logic (all must match)",
+			"item": [
+				{
+					"name": "4.1 All 3 Parameters Matching",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All criteria matched successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('RUPEE');",
+									"    var indiaRate = pm.collectionVariables.get('indiaRupeeRate');",
+									"    pm.expect(jsonData.exchangeRate).to.eql(indiaRate);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=India&currency=Rupee&country_currency_desc=India-Rupee",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "India"
+								},
+								{
+									"key": "currency",
+									"value": "Rupee"
+								},
+								{
+									"key": "country_currency_desc",
+									"value": "India-Rupee"
+								}
+							]
+						},
+						"description": "All 3 parameters consistent - should find matching rate"
+					},
+					"response": []
+				},
+				{
+					"name": "4.2 Contradicting Parameters - Should Fail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 503 Service Unavailable\", function () {",
+									"    pm.response.to.have.status(503);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates no matching rate\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('no exchange rate');",
+									"    pm.expect(jsonData.message).to.include('country=Pakistan');",
+									"    pm.expect(jsonData.message).to.include('country_currency_desc=India-Rupee');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Pakistan&currency=Rupee&country_currency_desc=India-Rupee",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Pakistan"
+								},
+								{
+									"key": "currency",
+									"value": "Rupee"
+								},
+								{
+									"key": "country_currency_desc",
+									"value": "India-Rupee"
+								}
+							]
+						},
+						"description": "CRITICAL TEST: Contradicting parameters (Pakistan country + India description) should fail to find match due to AND logic"
+					},
+					"response": []
+				},
+				{
+					"name": "4.3 Wrong Country for Currency",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 503 Service Unavailable\", function () {",
+									"    pm.response.to.have.status(503);",
+									"});",
+									"",
+									"pm.test(\"Error indicates no matching rate\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('no exchange rate');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=India&currency=Euro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "India"
+								},
+								{
+									"key": "currency",
+									"value": "Euro"
+								}
+							]
+						},
+						"description": "Invalid combination: India doesn't use Euro currency"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Currency Conversion - Error Handling",
+			"description": "Test validation and error scenarios",
+			"item": [
+				{
+					"name": "5.1 No Parameters Provided",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message requires at least one parameter\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('Must specify at least one');",
+									"    pm.expect(jsonData.message).to.include('country');",
+									"    pm.expect(jsonData.message).to.include('currency');",
+									"    pm.expect(jsonData.message).to.include('country_currency_desc');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"]
+						},
+						"description": "VALIDATION TEST: Should return 400 when no currency parameters provided"
+					},
+					"response": []
+				},
+				{
+					"name": "5.2 Transaction Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404 Not Found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates transaction not found\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.eql('Not Found');",
+									"    pm.expect(jsonData.message).to.include('Transaction not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/non-existent-tx-id?country=Japan&currency=Yen",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "non-existent-tx-id"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Japan"
+								},
+								{
+									"key": "currency",
+									"value": "Yen"
+								}
+							]
+						},
+						"description": "Test error handling when transaction doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "5.3 No Exchange Rate Within 6 Months",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 503 Service Unavailable\", function () {",
+									"    pm.response.to.have.status(503);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates no rate within 6 months\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('no exchange rate within 6 months');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=NonExistentCountry&currency=FakeCurrency",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "NonExistentCountry"
+								},
+								{
+									"key": "currency",
+									"value": "FakeCurrency"
+								}
+							]
+						},
+						"description": "Test when no matching exchange rate exists in Treasury API"
+					},
+					"response": []
+				},
+				{
+					"name": "5.4 Empty Parameter Values",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message requires valid parameters\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('Must specify at least one');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=&currency=&country_currency_desc=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": ""
+								},
+								{
+									"key": "currency",
+									"value": ""
+								},
+								{
+									"key": "country_currency_desc",
+									"value": ""
+								}
+							]
+						},
+						"description": "Test validation: empty strings should be treated as no parameters"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Available Currencies",
+			"description": "Test the available currencies endpoint",
+			"item": [
+				{
+					"name": "6.1 Get Available Currencies List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array of currency codes\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"Contains expected major currencies\", function () {",
+									"    var currencies = pm.response.json();",
+									"    pm.expect(currencies).to.include('EUR');",
+									"    pm.expect(currencies).to.include('JPY');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/currencies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "currencies"]
+						},
+						"description": "Retrieve list of all available currency codes for conversion"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Edge Cases and Special Scenarios",
+			"description": "Test special edge cases and boundary conditions",
+			"item": [
+				{
+					"name": "7.1 Case Insensitive Currency Matching",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Case insensitive matching works\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.currencyCode).to.eql('EUR');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=euro zone&currency=EURO",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "euro zone"
+								},
+								{
+									"key": "currency",
+									"value": "EURO"
+								}
+							]
+						},
+						"description": "Test that matching is case-insensitive"
+					},
+					"response": []
+				},
+				{
+					"name": "7.2 Recent Transaction Date",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Recent date uses most current exchange rate\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var transactionDate = new Date(jsonData.transactionDate);",
+									"    var rateDate = new Date(jsonData.exchangeRateDate);",
+									"    var today = new Date();",
+									"    ",
+									"    // Transaction date should be recent (within last week)",
+									"    var daysDiff = (today - transactionDate) / (1000 * 60 * 60 * 24);",
+									"    pm.expect(daysDiff).to.be.below(7);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Euro Zone&currency=Euro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Euro Zone"
+								},
+								{
+									"key": "currency",
+									"value": "Euro"
+								}
+							]
+						},
+						"description": "Test conversion for a recent transaction (uses most current rate)"
+					},
+					"response": []
+				},
+				{
+					"name": "7.3 Converted Amount Rounding",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Converted amount is rounded to 2 decimals\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var amount = jsonData.convertedAmount.toString();",
+									"    var decimalPart = amount.split('.')[1];",
+									"    ",
+									"    // Should have at most 2 decimal places",
+									"    if (decimalPart) {",
+									"        pm.expect(decimalPart.length).to.be.at.most(2);",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Conversion calculation is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var expected = jsonData.originalAmountUsd * jsonData.exchangeRate;",
+									"    var expectedRounded = Math.round(expected * 100) / 100;",
+									"    pm.expect(jsonData.convertedAmount).to.eql(expectedRounded);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversions/7178f1ff-d207-4315-ab4a-c21a6a7c1b03?country=Euro Zone&currency=Euro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "conversions", "7178f1ff-d207-4315-ab4a-c21a6a7c1b03"],
+							"query": [
+								{
+									"key": "country",
+									"value": "Euro Zone"
+								},
+								{
+									"key": "currency",
+									"value": "Euro"
+								}
+							]
+						},
+						"description": "Verify that converted amounts are properly rounded to 2 decimal places"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
