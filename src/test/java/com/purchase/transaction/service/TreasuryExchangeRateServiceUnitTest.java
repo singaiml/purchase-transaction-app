@@ -102,4 +102,37 @@ class TreasuryExchangeRateServiceUnitTest {
         assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("EUR", null, LocalDate.now()));
         assertThrows(IllegalArgumentException.class, () -> service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.now(), null));
     }
+
+    @Test
+    void parse_whenDataNodeMissing_returnsEmptyList() throws Exception {
+        String json = "{}"; // no 'data' node
+        server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        List<ExchangeRate> rates = service.getExchangeRatesForDate(LocalDate.of(2025,12,1));
+        assertNotNull(rates);
+        assertTrue(rates.isEmpty());
+        server.verify();
+    }
+
+    @Test
+    void getMostRecentExchangeRateWithinRange_emptyData_returnsEmptyOptional() throws Exception {
+        String json = "{\"data\":[]}"; // empty data array
+        server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        Optional<ExchangeRate> opt = service.getMostRecentExchangeRateWithinRange("EUR", LocalDate.of(2025,1,1), LocalDate.of(2025,6,30));
+        assertFalse(opt.isPresent());
+        server.verify();
+    }
+
+    @Test
+    void parse_blankEffectiveDate_resultsInNullEffectiveDate() throws Exception {
+        String json = "{\"data\":[{\"currency_code\":\"EUR\",\"exchange_rate\":\"0.5\",\"exchange_rate_date\":\"\",\"currency_name\":\"Euro\",\"country_code\":\"EU\"}]}";
+        server.expect(requestTo(startsWith("http://test"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        List<ExchangeRate> rates = service.getExchangeRatesForDate(LocalDate.of(2025,12,1));
+        assertEquals(1, rates.size());
+        ExchangeRate r = rates.get(0);
+        assertNull(r.getEffectiveDate());
+        server.verify();
+    }
 }
